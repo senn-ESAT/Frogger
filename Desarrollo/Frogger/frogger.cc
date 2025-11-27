@@ -222,7 +222,7 @@ void DibujarJugador(){
 void DibujarMeta(float X){
   esat::DrawSprite(SpriteMeta, X, 72);
   esat::DrawSprite(SpritePastoVerde,X + esat::SpriteWidth(SpriteMeta), 72);
-    esat::DrawSprite(SpritePastoVerde,X + (esat::SpriteWidth(SpriteMeta)+esat::SpriteWidth(SpritePastoVerde)), 72);
+  esat::DrawSprite(SpritePastoVerde,X + (esat::SpriteWidth(SpriteMeta)+esat::SpriteWidth(SpritePastoVerde)), 72);
 }
 
 void DibujarPiso(){
@@ -237,6 +237,14 @@ void DibujarPiso(){
     esat::DrawSprite(SpritePasto,i*esat::SpriteWidth(SpritePasto), ScreenY/2);
     esat::DrawSprite(SpritePasto,i*esat::SpriteWidth(SpritePasto), ScreenY-96);
   }
+}
+
+void DibujarVeiculos(){
+
+}
+
+void DibujarFlotantes(){
+
 }
 
 void DibujarJuego(){
@@ -299,11 +307,11 @@ void DibujarPantalla(){
 //Pie de pagina
 void DibujarVidas(){
   for(int i = 0; i < Player1.vidas; i++){
-    esat::DrawSprite(SpriteVidas, i*esat::SpriteWidth(SpriteVidas), Screeny-48);
+    esat::DrawSprite(SpriteVidas, i*esat::SpriteWidth(SpriteVidas), ScreenY-48);
   }
   if(numPlayers > 1){
     for(int i = 0; i < Player2.vidas; i++){
-      esat::DrawSprite(SpriteVidas, i*esat::SpriteWidth(SpriteVidas), (Screeny-48)+esat::SpriteHeight(SpriteVidas));
+      esat::DrawSprite(SpriteVidas, i*esat::SpriteWidth(SpriteVidas), (ScreenY-48)+esat::SpriteHeight(SpriteVidas));
     }
   }
 }
@@ -311,8 +319,8 @@ void DibujarVidas(){
 void DibujarPie(){
   if(TipoPantalla == 1){
     DibujarVidas();
-    DibujarNivel();
-    TibujarTime();
+    //TO-DO DibujarNivel();
+    //TO-DO TibujarTime();
   }
   else{
     //TO-DO display creditos
