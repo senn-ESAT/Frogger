@@ -33,7 +33,7 @@ struct Sprite{
 struct Frog{
   Colision colision;
   Sprite sprite;
-  int dir; //direccion -> 0 = arriba, 1=derecha, 2 = abajo, 3 = izquierda
+  int dir, puntuacion; //direccion -> 0 = arriba, 1=derecha, 2 = abajo, 3 = izquierda
   int vidas = 3;
 };
 
@@ -48,6 +48,7 @@ struct SafeZone{
 struct Autos{
   Colision colision;
   Sprite sprite;
+  D
   int velocidad;
 };
 
@@ -75,15 +76,15 @@ struct Cocodlio{
 struct Serpiente{
   Colision colision;
   Sprite sprite;
+  Direccion direccion;
   int velocidad;
-  int direccion; //siempre 0123 para reutilizar funciones epro se usan solo 3 y 1
 };
 
 struct Perro{
   Colision colision;
   Sprite sprite;
+  Direccion direccion; // o --> o <--
   int velocidad;
-  int direccion; // o --> o <--
 };
 
 struct Mosca{
@@ -101,11 +102,12 @@ struct RanaNPC{
 Frog Player1, Player2;
 
 //Variables de sistema
+const int FontSize = 19, Margen = 100;
 const float ScreenX = 672, ScreenY = 768; //screen size
 unsigned char fps=25; //Control de frames por segundo
 double current_time, last_time;
 float Points[10] = {0,0,ScreenX,0,ScreenX,ScreenY/2,0,ScreenY/2,0,0}; //zona azul
-int TipoPantalla = 1, numPlayers; 
+int TipoPantalla = 1, numPlayers, highScore = 0;; 
 
 //Sprite Handles
 //UI
@@ -249,9 +251,42 @@ void DibujarJugador(){
   }
 }
 
-void DibujarCabecera(){
-  //TO-DO puntos aprtida y high score
+void DibujarPiso(){
+
 }
+
+
+  // UI
+void DibujarCabecera(){
+  char puntuacionJ1[5], puntuacionJ2[5], highScoreChars[5];
+  int c = ((esat::Time()/100.0f) - tempTextosSeleccionJugadores);
+
+  itoa(Player1.puntuacion + 10000, puntuacionJ1, 10);
+  itoa(Player2.puntuacion + 10000, puntuacionJ2, 10);
+  itoa(highScore + 10000, highScoreChars, 10);
+    
+  esat::DrawText(Margen+6,FontSize+10,"1-UP   HI-SCORE");
+
+  esat::DrawText(Margen+6,(FontSize+10)*2, puntuacionJ1+1);
+    
+  esat::DrawText((ScreenX*0.5)-FontSize*2,(FontSize+10)*2, highScoreChars+1);
+  esat::DrawText((100-6)-(FontSize*4),(FontSize+10)*2,puntuacionJ2+1);
+}
+  void DrawSetTextFont(const char *name);
+  void DrawSetTextSize(float size);
+  void DrawSetTextBlur(float blur_radius);
+  void DrawText(float x, float y, const char *text);
+
+void GuardarHighScore() {
+    //Comprueba solo el jugador 1 al no tener modo 2 jugadores implementado
+    if (Player1.puntuacion > highScore) {
+      highScore = Player1.puntuacion;
+    }
+    if (Player2.puntuacion > highScore) {
+      highScore = Player2.puntuacion;
+    }
+}
+
 
 void DibujarPie(){
   if(TipoPantalla == 1){
@@ -263,6 +298,7 @@ void DibujarPie(){
 }
 
 void DibujarJuego(){
+  DibujarPiso();
   DibujarJugador();
 }
 
@@ -298,7 +334,6 @@ void InicializarJugadores(){
   Player1.sprite.img = esat::SubSprite(SpriteFrog, 0,0,36,39);
   Player1.colision.P2.x = Player1.colision.P1.x + esat::SpriteWidth(Player1.sprite.img);
   Player1.colision.P2.y = Player1.colision.P1.y + esat::SpriteHeight(Player1.sprite.img);
-
 }
 
 void DibujarFondo(){
@@ -343,11 +378,15 @@ void ReleaseOfSprites(){
 }
 
 int esat::main(int argc, char **argv) {
-  esat::WindowInit(ScreenX, ScreenY);//dato importante todas la simajene c inicializan despes de windowsInit
-  WindowSetMouseVisibility(true);
   srand(time(NULL));
+  esat::WindowInit(ScreenX, ScreenY);
+  WindowSetMouseVisibility(true);
+
   LoadSprites();
   InicializarJugadores();
+  //fuente
+  esat::DrawSetTextFont("Desarrollo/Frogger/Assets/font/arcade-legacy.ttf");
+  esat::DrawSetTextSize(FontSize);
   
   while(esat::WindowIsOpened() && !esat::IsSpecialKeyDown(esat::kSpecialKey_Escape)){
     last_time = esat::Time();
