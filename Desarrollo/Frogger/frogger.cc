@@ -33,8 +33,8 @@ struct Sprite{
 struct Frog{
   Colision colision;
   Sprite sprite;
-  int dir, puntuacion; //direccion -> 0 = arriba, 1=derecha, 2 = abajo, 3 = izquierda
-  int vidas = 3;
+  Direccion dir;
+  int vidas = 3, score;
 };
 
 //-------------Generales-------------
@@ -48,7 +48,7 @@ struct SafeZone{
 struct Autos{
   Colision colision;
   Sprite sprite;
-  D
+  Direccion dir;
   int velocidad;
 };
 
@@ -102,12 +102,12 @@ struct RanaNPC{
 Frog Player1, Player2;
 
 //Variables de sistema
-const int FontSize = 19, Margen = 100;
+const int FontSize = 20, Margen = 100;
 const float ScreenX = 672, ScreenY = 768; //screen size
 unsigned char fps=25; //Control de frames por segundo
 double current_time, last_time;
 float Points[10] = {0,0,ScreenX,0,ScreenX,ScreenY/2,0,ScreenY/2,0,0}; //zona azul
-int TipoPantalla = 1, numPlayers, highScore = 0;; 
+int TipoPantalla = 1, numPlayers = 1, highScore = 00000;
 
 //Sprite Handles
 //UI
@@ -117,6 +117,7 @@ esat::SpriteHandle SpriteVidas;
 esat::SpriteHandle SpriteTiempo;
 //Extras
 esat::SpriteHandle SpriteMeta;
+esat::SpriteHandle SpritePastoVerde;
 esat::SpriteHandle SpritePasto;
 esat::SpriteHandle SpriteMosca;
 esat::SpriteHandle SpriteCocodriloCampero;
@@ -137,40 +138,6 @@ esat::SpriteHandle SpriteAuto4;
 esat::SpriteHandle SpritePerro;
 esat::SpriteHandle SpriteSerpiente;
 
-
-//Rotacion Sprites
-//si tengo tiempo
-// esat::SpriteTransform Rotacion;
-// RotacionImagen(DERECHA, esat::SpriteHeight(prueba), esat::SpriteWidth(prueba));
-// esat::DrawSprite(prueba, Rotacion);
-// RotacionImagen(IZQUIERDA, esat::SpriteHeight(prueba), esat::SpriteWidth(prueba));
-// esat::DrawSprite(prueba, Rotacion);
-// RotacionImagen(ARRIBA, esat::SpriteHeight(prueba), esat::SpriteWidth(prueba));
-// esat::DrawSprite(prueba, Rotacion);
-// RotacionImagen(ABAJO, esat::SpriteHeight(prueba), esat::SpriteWidth(prueba));
-// esat::DrawSprite(prueba, Rotacion);
-// void RotacionImagen(Direccion dir, int alto, int ancho){
-//   switch(dir){
-//     case ARRIBA:
-//       Rotacion.angle = 0;
-//     break;
-//     case DERECHA:
-//       Rotacion.x += ancho;
-//       Rotacion.angle = 1.5708;
-//     break;
-//     case ABAJO:
-//       Rotacion.y -= alto;
-//       Rotacion.angle = 3.14159;
-//     break;
-//     case IZQUIERDA:
-//       Rotacion.y -= alto;
-//       Rotacion.angle = 4.71239;
-//     break;  
-//   }
-// }
-
-
-
 void LoadSprites(){
   //UI
   SpriteLetras = esat::SpriteFromFile("./Assets/img/SheetLetras.png");
@@ -178,7 +145,8 @@ void LoadSprites(){
   SpriteVidas = esat::SpriteFromFile("./Assets/img/Vidas.png");
   SpriteTiempo = esat::SpriteFromFile("./Assets/img/SheetTime.png");
   //Extras
-  SpriteMeta = esat::SpriteFromFile("./Assets/img/Meta.png");
+  SpriteMeta = esat::SpriteFromFile("./Assets/img/lagunito.png");
+  SpritePastoVerde = esat::SpriteFromFile("./Assets/img/piso.png");
   SpritePasto = esat::SpriteFromFile("./Assets/img/Pasto.png");
   SpriteMosca = esat::SpriteFromFile("./Assets/img/Mosca.png");
   SpriteCocodriloCampero = esat::SpriteFromFile("./Assets/img/SheetCampero.png");
@@ -214,10 +182,10 @@ void LoadSprites(){
 
 void InputsInGame(){
   if(esat::IsSpecialKeyDown(esat::kSpecialKey_Up)){
-    Player1.colision.P1.y += 48;
+    Player1.colision.P1.y -= 48;
   }
   if(esat::IsSpecialKeyDown(esat::kSpecialKey_Down)){
-    Player1.colision.P1.y -= 48;
+    Player1.colision.P1.y += 48;
   }
   if(esat::IsSpecialKeyDown(esat::kSpecialKey_Right)){
     Player1.colision.P1.x += 48;
@@ -246,77 +214,110 @@ void DetectarInput(){
 
 void DibujarJugador(){
   esat::DrawSprite(Player1.sprite.img, Player1.colision.P1.x, Player1.colision.P1.y);
-  if(numPlayers>2){
+  if(numPlayers>1){
     //TO-DO dibujar player 2
   }
 }
 
+void DibujarMeta(float X){
+  esat::DrawSprite(SpriteMeta, X, 72);
+  esat::DrawSprite(SpritePastoVerde,X + esat::SpriteWidth(SpriteMeta), 72);
+    esat::DrawSprite(SpritePastoVerde,X + (esat::SpriteWidth(SpriteMeta)+esat::SpriteWidth(SpritePastoVerde)), 72);
+}
+
 void DibujarPiso(){
-
-}
-
-
-  // UI
-void DibujarCabecera(){
-  char puntuacionJ1[5], puntuacionJ2[5], highScoreChars[5];
-  int c = ((esat::Time()/100.0f) - tempTextosSeleccionJugadores);
-
-  itoa(Player1.puntuacion + 10000, puntuacionJ1, 10);
-  itoa(Player2.puntuacion + 10000, puntuacionJ2, 10);
-  itoa(highScore + 10000, highScoreChars, 10);
-    
-  esat::DrawText(Margen+6,FontSize+10,"1-UP   HI-SCORE");
-
-  esat::DrawText(Margen+6,(FontSize+10)*2, puntuacionJ1+1);
-    
-  esat::DrawText((ScreenX*0.5)-FontSize*2,(FontSize+10)*2, highScoreChars+1);
-  esat::DrawText((100-6)-(FontSize*4),(FontSize+10)*2,puntuacionJ2+1);
-}
-  void DrawSetTextFont(const char *name);
-  void DrawSetTextSize(float size);
-  void DrawSetTextBlur(float blur_radius);
-  void DrawText(float x, float y, const char *text);
-
-void GuardarHighScore() {
-    //Comprueba solo el jugador 1 al no tener modo 2 jugadores implementado
-    if (Player1.puntuacion > highScore) {
-      highScore = Player1.puntuacion;
-    }
-    if (Player2.puntuacion > highScore) {
-      highScore = Player2.puntuacion;
-    }
-}
-
-
-void DibujarPie(){
-  if(TipoPantalla == 1){
-    //TO-DO dibujar vidas, nivel y TIME
+  //pasto arriba
+  int Anchura = esat::SpriteWidth(SpriteMeta)+(esat::SpriteWidth(SpritePastoVerde)*2);
+  for(int i = 0; i<5; i++){
+    DibujarMeta(Anchura*i);
   }
-  else{
-    //TO-DO display creditos
+
+  //pasto centro
+  for(int i = 0; i<14; i++){
+    esat::DrawSprite(SpritePasto,i*esat::SpriteWidth(SpritePasto), ScreenY/2);
+    esat::DrawSprite(SpritePasto,i*esat::SpriteWidth(SpritePasto), ScreenY-96);
   }
 }
 
 void DibujarJuego(){
   DibujarPiso();
   DibujarJugador();
+  DibujarVeiculos();
+  DibujarFlotantes();
 }
+
+  // UI
+void DibujarCabecera(){
+  char ScoreP1[5] = {0}, ScoreP2[5] = {0}, highScoreChars[5] = {0};
+  //itoa de int a char
+  itoa(Player1.score +100000, ScoreP1, 10);
+  itoa(Player2.score +100000, ScoreP2, 10);
+  itoa(highScore +100000, highScoreChars, 10);
+
+  esat::DrawSetFillColor(255,255,255);
+  
+  esat::DrawText((ScreenX/2)-230, 23, "1-UP   HI-SCORE");
+  if(numPlayers > 1)
+    esat::DrawText((ScreenX/2)+140, 25, "2-UP");
+  
+  esat::DrawSetFillColor(255,0,0);
+  esat::DrawText((ScreenX/2)-250, 43, ScoreP1+1);
+  esat::DrawText((ScreenX/2)-60, 43, highScoreChars+1);
+  if(numPlayers > 1)
+  esat::DrawText((ScreenX/2)+140, 25, ScoreP2+1);
+}
+
+//esto c llama al game over
+void GuardarHighScore() {
+    //Comprueba solo el jugador 1 al no tener modo 2 jugadores implementado
+    if (Player1.score > highScore) {
+      highScore = Player1.score;
+    }
+    if (Player2.score > highScore) {
+      highScore = Player2.score;
+    }
+}
+
+
+
 
 void DibujarPantalla(){
   //TO-DO if in game (juego) o menu (animacion)
   switch(TipoPantalla){
     case 0:
-      //TO-DO DubujarMenu();
-      break;
+    //TO-DO DubujarMenu();
+    break;
     case 1:
-      DibujarJuego();
+    DibujarJuego();
     break;
     case 2:
-      //TO-DO DibujarCreditos();
-      break;
+    //TO-DO DibujarCreditos();
+    break;
   }
 }
 
+//Pie de pagina
+void DibujarVidas(){
+  for(int i = 0; i < Player1.vidas; i++){
+    esat::DrawSprite(SpriteVidas, i*esat::SpriteWidth(SpriteVidas), Screeny-48);
+  }
+  if(numPlayers > 1){
+    for(int i = 0; i < Player2.vidas; i++){
+      esat::DrawSprite(SpriteVidas, i*esat::SpriteWidth(SpriteVidas), (Screeny-48)+esat::SpriteHeight(SpriteVidas));
+    }
+  }
+}
+
+void DibujarPie(){
+  if(TipoPantalla == 1){
+    DibujarVidas();
+    DibujarNivel();
+    TibujarTime();
+  }
+  else{
+    //TO-DO display creditos
+  }
+}
 
 void Dispaly(){
   DibujarCabecera();
@@ -329,9 +330,9 @@ void Dispaly(){
 *******************************************************/
 
 void InicializarJugadores(){
-  Player1.colision.P1.x = ScreenX/2;
+  Player1.colision.P1.x = (ScreenX/2)-24;
   Player1.colision.P1.y = ScreenY-96;
-  Player1.sprite.img = esat::SubSprite(SpriteFrog, 0,0,36,39);
+  Player1.sprite.img = esat::SubSprite(SpriteFrog, 0,0,48,48);
   Player1.colision.P2.x = Player1.colision.P1.x + esat::SpriteWidth(Player1.sprite.img);
   Player1.colision.P2.y = Player1.colision.P1.y + esat::SpriteHeight(Player1.sprite.img);
 }
@@ -356,6 +357,7 @@ void ReleaseOfSprites(){
   esat::SpriteRelease(SpriteTiempo);
   //Extras
   esat::SpriteRelease(SpriteMeta);
+  esat::SpriteRelease(SpritePastoVerde);
   esat::SpriteRelease(SpritePasto);
   esat::SpriteRelease(SpriteMosca);
   esat::SpriteRelease(SpriteCocodriloCampero);
@@ -385,7 +387,7 @@ int esat::main(int argc, char **argv) {
   LoadSprites();
   InicializarJugadores();
   //fuente
-  esat::DrawSetTextFont("Desarrollo/Frogger/Assets/font/arcade-legacy.ttf");
+  esat::DrawSetTextFont("./Assets/font/arcade-legacy.ttf");
   esat::DrawSetTextSize(FontSize);
   
   while(esat::WindowIsOpened() && !esat::IsSpecialKeyDown(esat::kSpecialKey_Escape)){
