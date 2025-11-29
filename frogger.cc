@@ -49,7 +49,7 @@ struct Autos{
   Colision colision;
   Sprite sprite;
   Direccion dir;
-  int velocidad;
+  int velocidad, ancho, espacio;
 };
 
 struct Tronco{
@@ -100,14 +100,15 @@ struct RanaNPC{
 };
 
 Frog Player1, Player2;
+Autos F1, F2, F3, F4, Camion;
 
 //Variables de sistema
-const int FontSize = 20, Margen = 100;
-const float ScreenX = 672, ScreenY = 768; //screen size
+const int FontSize = 20, SpritesHeight = 48;
+const int ScreenX = 672, ScreenY = 768; //screen size
 unsigned char fps=25; //Control de frames por segundo
 double current_time, last_time;
 float Points[10] = {0,0,ScreenX,0,ScreenX,ScreenY/2,0,ScreenY/2,0,0}; //zona azul
-int TipoPantalla = 1, numPlayers = 1, highScore = 00000;
+int TipoPantalla = 1, numPlayers = 1, highScore = 0, Nivel = 0, LastNivel = 0;
 
 //Sprite Handles
 //UI
@@ -232,15 +233,31 @@ void DibujarPiso(){
     DibujarMeta(Anchura*i);
   }
 
-  //pasto centro
+  //pasto violeta
   for(int i = 0; i<14; i++){
     esat::DrawSprite(SpritePasto,i*esat::SpriteWidth(SpritePasto), ScreenY/2);
     esat::DrawSprite(SpritePasto,i*esat::SpriteWidth(SpritePasto), ScreenY-96);
   }
 }
 
-void DibujarVeiculos(){
+void MoverAutos(){
+  F1.colision.P1.x -= F1.velocidad;
+  F1.colision.P2.x -= F1.velocidad;
+  F2.colision.P1.x += F2.velocidad;
+  F3.colision.P1.x -= F3.velocidad;
+  F4.colision.P1.x += F4.velocidad;
+  Camion.colision.P1.x -= Camion.velocidad;
+}
 
+void DibujarVeiculos(){
+  MoverAutos();
+  for(int i = 0; i <5; i++){
+    esat::DrawSprite(F1.sprite.img, F1.colision.P1.x+(i*(F1.espacio)), F1.colision.P1.y); 
+    esat::DrawSprite(F2.sprite.img, F2.colision.P1.x+(i*(F2.espacio)), F2.colision.P1.y);
+    esat::DrawSprite(F3.sprite.img, F3.colision.P1.x+(i*(F3.espacio)), F3.colision.P1.y);
+    esat::DrawSprite(F4.sprite.img, F4.colision.P1.x+(i*(F4.espacio)), F4.colision.P1.y);
+    esat::DrawSprite(Camion.sprite.img, Camion.colision.P1.x+(i*(Camion.espacio)), Camion.colision.P1.y);
+  }
 }
 
 void DibujarFlotantes(){
@@ -286,9 +303,6 @@ void GuardarHighScore() {
     }
 }
 
-
-
-
 void DibujarPantalla(){
   //TO-DO if in game (juego) o menu (animacion)
   switch(TipoPantalla){
@@ -311,7 +325,7 @@ void DibujarVidas(){
   }
   if(numPlayers > 1){
     for(int i = 0; i < Player2.vidas; i++){
-      esat::DrawSprite(SpriteVidas, i*esat::SpriteWidth(SpriteVidas), (ScreenY-48)+esat::SpriteHeight(SpriteVidas));
+      esat::DrawSprite(SpriteVidas, i*esat::SpriteWidth(SpriteVidas), (ScreenY-24)+esat::SpriteHeight(SpriteVidas));
     }
   }
 }
@@ -339,16 +353,84 @@ void Dispaly(){
 
 void InicializarJugadores(){
   Player1.colision.P1.x = (ScreenX/2)-24;
-  Player1.colision.P1.y = ScreenY-96;
+  Player1.colision.P1.y = ScreenY-(SpritesHeight*2);
   Player1.sprite.img = esat::SubSprite(SpriteFrog, 0,0,48,48);
   Player1.colision.P2.x = Player1.colision.P1.x + esat::SpriteWidth(Player1.sprite.img);
   Player1.colision.P2.y = Player1.colision.P1.y + esat::SpriteHeight(Player1.sprite.img);
+}
+
+void InicializarAutos(){
+  F1.sprite.img = SpriteAuto1;
+  F1.ancho = esat::SpriteWidth(F1.sprite.img);
+  F1.dir = LEFT;
+  F1.colision.P1.y = ScreenY-(SpritesHeight*3);
+  F1.colision.P1.x = rand()%(ScreenX);
+  F1.colision.P2 = {F1.colision.P1.x+F1.ancho, F1.colision.P1.y + SpritesHeight};
+
+  F2.sprite.img = SpriteAuto2;
+  F2.ancho = esat::SpriteWidth(F2.sprite.img);
+  F2.dir = RIGHT;
+  F2.colision.P1.y = ScreenY-(SpritesHeight*4);
+  F2.colision.P1.x = rand()%(ScreenX);
+  F2.colision.P2 = {F2.colision.P1.x+F2.ancho, F2.colision.P1.y + SpritesHeight};
+
+  F3.sprite.img = SpriteAuto3;
+  F3.ancho = esat::SpriteWidth(F3.sprite.img);
+  F3.dir = LEFT;
+  F3.colision.P1.y = ScreenY-(SpritesHeight*5);
+  F3.colision.P1.x = rand()%(ScreenX);
+  F3.colision.P2 = {F3.colision.P1.x+F3.ancho, F3.colision.P1.y + SpritesHeight};
+
+  F4.sprite.img = SpriteAuto4;
+  F4.ancho = esat::SpriteWidth(F4.sprite.img);
+  F4.dir = RIGHT;
+  F4.colision.P1.y = ScreenY-(SpritesHeight*6);
+  F4.colision.P2.y = F4.colision.P1.y + SpritesHeight;
+  F4.colision.P1.x = rand()%(ScreenX);
+  F4.colision.P2 = {F4.colision.P1.x+F4.ancho, F4.colision.P1.y + SpritesHeight};
+
+  Camion.sprite.img = SpriteCamion;
+  Camion.ancho = esat::SpriteWidth(Camion.sprite.img);
+  Camion.dir = LEFT;
+  Camion.colision.P1.y = ScreenY-(SpritesHeight*7);
+  Camion.colision.P1.x = rand()%(ScreenX);
+  Camion.colision.P2 = {Camion.colision.P1.x+Camion.ancho, Camion.colision.P1.y + SpritesHeight};
 }
 
 void DibujarFondo(){
   esat::DrawClear(0,0,0);
   esat::DrawSetFillColor(0,4,74);
   esat::DrawSolidPath(Points,5);
+}
+
+int ResetAncho(int n1){
+  int respuesta;
+  respuesta = n1 + rand() % ((n1*3)-n1);
+  return respuesta;
+}
+
+int ResetVelocidad(){
+  int respuesta;
+  respuesta = 1 + rand() % 5;
+  return respuesta;
+}
+
+void CambiarValoresNivel(){
+  if(Nivel >= LastNivel){
+    F1.espacio = ResetAncho(F1.ancho);
+    F2.espacio = ResetAncho(F2.ancho);
+    F3.espacio = ResetAncho(F3.ancho);
+    F4.espacio = ResetAncho(F4.ancho);
+    Camion.espacio = Camion.ancho + rand() % ((Camion.ancho*2) - Camion.ancho + 1);
+
+    F1.velocidad = ResetVelocidad();
+    F2.velocidad = ResetVelocidad();
+    F3.velocidad = ResetVelocidad();
+    F4.velocidad = ResetVelocidad();
+    Camion.velocidad = 3;
+    //parece que el camion no cambia de velocidad
+    LastNivel++;
+  }
 }
 
 void ControlFPS(){
@@ -394,6 +476,7 @@ int esat::main(int argc, char **argv) {
 
   LoadSprites();
   InicializarJugadores();
+  InicializarAutos();
   //fuente
   esat::DrawSetTextFont("./Assets/font/arcade-legacy.ttf");
   esat::DrawSetTextSize(FontSize);
@@ -401,6 +484,7 @@ int esat::main(int argc, char **argv) {
   while(esat::WindowIsOpened() && !esat::IsSpecialKeyDown(esat::kSpecialKey_Escape)){
     last_time = esat::Time();
     esat::DrawBegin();
+    CambiarValoresNivel();
 
     DibujarFondo();
 
