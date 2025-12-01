@@ -100,7 +100,7 @@ struct RanaNPC{
 };
 
 Frog Player1, Player2;
-Autos F1, F2, F3, F4, Camion;
+Autos F1[5], F2[5], F3[5], F4[5], F5[5];
 
 //Variables de sistema
 const int FontSize = 20, SpritesHeight = 48;
@@ -222,13 +222,13 @@ void DibujarJugador(){
 
 void DibujarMeta(float X){
   esat::DrawSprite(SpriteMeta, X, 72);
-  esat::DrawSprite(SpritePastoVerde,X + esat::SpriteWidth(SpriteMeta), 72);
-  esat::DrawSprite(SpritePastoVerde,X + (esat::SpriteWidth(SpriteMeta)+esat::SpriteWidth(SpritePastoVerde)), 72);
+  esat::DrawSprite(SpritePastoVerde, X + esat::SpriteWidth(SpriteMeta), 72);
+  esat::DrawSprite(SpritePastoVerde, X + (esat::SpriteWidth(SpriteMeta) + esat::SpriteWidth(SpritePastoVerde)), 72);
 }
 
 void DibujarPiso(){
   //pasto arriba
-  int Anchura = esat::SpriteWidth(SpriteMeta)+(esat::SpriteWidth(SpritePastoVerde)*2);
+  int Anchura = esat::SpriteWidth(SpriteMeta) + (esat::SpriteWidth(SpritePastoVerde)*2);
   for(int i = 0; i<5; i++){
     DibujarMeta(Anchura*i);
   }
@@ -240,24 +240,66 @@ void DibujarPiso(){
   }
 }
 
-void MoverAutos(){
-  F1.colision.P1.x -= F1.velocidad;
-  F1.colision.P2.x -= F1.velocidad;
-  F2.colision.P1.x += F2.velocidad;
-  F3.colision.P1.x -= F3.velocidad;
-  F4.colision.P1.x += F4.velocidad;
-  Camion.colision.P1.x -= Camion.velocidad;
+void MoverObjeto(Autos *A){
+  for (int i = 0; i < 5; i++) {
+    if (A[i].dir == RIGHT) {
+      A[i].colision.P1.x += A[i].velocidad;
+      A[i].colision.P2.x += A[i].velocidad;
+    } else { // LEFT
+      A[i].colision.P1.x -= A[i].velocidad;
+      A[i].colision.P2.x -= A[i].velocidad;
+    }
+  }
+}
+
+void RetrocederAutos(Autos *A){
+  if (A[0].dir == RIGHT) {
+    for (int i = 0; i < 5; i++) { // [     >]
+      A[i].colision.P1.x -= A[i].espacio;
+      A[i].colision.P2.x -= A[i].espacio;
+    }
+  } 
+  else { // LEFT
+    for (int i = 0; i < 5; i++) { // [<      ]
+      A[i].colision.P1.x += A[i].espacio;
+      A[i].colision.P2.x += A[i].espacio;
+    }
+  }
+}
+
+void NoSalirDePantalla(){
+  if(F1[0].colision.P1.x < (0-F1[0].ancho)){ //si el de la izquierda sale de pantalla por la dimension de su sprite
+    RetrocederAutos(F1);
+  }
+  if(F2[4].colision.P1.x > ScreenX){  //si sale a la derecha
+    printf("%d \n", (int)F2[4].colision.P1.x);
+    RetrocederAutos(F2);
+  }
+  if(F3[0].colision.P1.x < (0-F3[0].ancho)){
+    RetrocederAutos(F3);
+  }
+  if(F4[4].colision.P1.x > ScreenX){
+    RetrocederAutos(F4);
+  }
+  if(F5[0].colision.P1.x <  (0-F5[0].ancho)){
+    RetrocederAutos(F5);
+  }
 }
 
 void DibujarVeiculos(){
-  MoverAutos();
-  for(int i = 0; i <5; i++){
-    esat::DrawSprite(F1.sprite.img, F1.colision.P1.x+(i*(F1.espacio)), F1.colision.P1.y); 
-    esat::DrawSprite(F2.sprite.img, F2.colision.P1.x+(i*(F2.espacio)), F2.colision.P1.y);
-    esat::DrawSprite(F3.sprite.img, F3.colision.P1.x+(i*(F3.espacio)), F3.colision.P1.y);
-    esat::DrawSprite(F4.sprite.img, F4.colision.P1.x+(i*(F4.espacio)), F4.colision.P1.y);
-    esat::DrawSprite(Camion.sprite.img, Camion.colision.P1.x+(i*(Camion.espacio)), Camion.colision.P1.y);
+  MoverObjeto(F1);
+  MoverObjeto(F2);
+  MoverObjeto(F3);
+  MoverObjeto(F4);
+  MoverObjeto(F5);
+  for(int i = 0; i < 5; i++){
+    esat::DrawSprite(F1[i].sprite.img, F1[0].colision.P1.x+(i*F1[i].espacio), F1[i].colision.P1.y); 
+    esat::DrawSprite(F2[i].sprite.img, F2[0].colision.P1.x+(i*F2[i].espacio), F2[i].colision.P1.y);
+    esat::DrawSprite(F3[i].sprite.img, F3[0].colision.P1.x+(i*F3[i].espacio), F3[i].colision.P1.y);
+    esat::DrawSprite(F4[i].sprite.img, F4[0].colision.P1.x+(i*F4[i].espacio), F4[i].colision.P1.y);
+    esat::DrawSprite(F5[i].sprite.img, F5[0].colision.P1.x+(i*F5[i].espacio), F5[i].colision.P1.y);
   }
+  NoSalirDePantalla();  //controla si el auto se sale de la pantalla
 }
 
 void DibujarFlotantes(){
@@ -360,41 +402,43 @@ void InicializarJugadores(){
 }
 
 void InicializarAutos(){
-  F1.sprite.img = SpriteAuto1;
-  F1.ancho = esat::SpriteWidth(F1.sprite.img);
-  F1.dir = LEFT;
-  F1.colision.P1.y = ScreenY-(SpritesHeight*3);
-  F1.colision.P1.x = rand()%(ScreenX);
-  F1.colision.P2 = {F1.colision.P1.x+F1.ancho, F1.colision.P1.y + SpritesHeight};
+  for(int i = 0; i < 5; i++) {
+    F1[i].sprite.img = SpriteAuto1;
+    F1[i].ancho = esat::SpriteWidth(F1[i].sprite.img);
+    F1[i].dir = LEFT;
+    F1[i].colision.P1.y = ScreenY-(SpritesHeight*3);
+    F1[i].colision.P1.x = rand()%(ScreenX);
+    F1[i].colision.P2 = {F1[i].colision.P1.x+F1[i].ancho, F1[i].colision.P1.y + SpritesHeight};
 
-  F2.sprite.img = SpriteAuto2;
-  F2.ancho = esat::SpriteWidth(F2.sprite.img);
-  F2.dir = RIGHT;
-  F2.colision.P1.y = ScreenY-(SpritesHeight*4);
-  F2.colision.P1.x = rand()%(ScreenX);
-  F2.colision.P2 = {F2.colision.P1.x+F2.ancho, F2.colision.P1.y + SpritesHeight};
+    F2[i].sprite.img = SpriteAuto2;
+    F2[i].ancho = esat::SpriteWidth(F2[i].sprite.img);
+    F2[i].dir = RIGHT;
+    F2[i].colision.P1.y = ScreenY-(SpritesHeight*4);
+    F2[i].colision.P1.x = rand()%(ScreenX);
+    F2[i].colision.P2 = {F2[i].colision.P1.x+F2[i].ancho, F2[i].colision.P1.y + SpritesHeight};
 
-  F3.sprite.img = SpriteAuto3;
-  F3.ancho = esat::SpriteWidth(F3.sprite.img);
-  F3.dir = LEFT;
-  F3.colision.P1.y = ScreenY-(SpritesHeight*5);
-  F3.colision.P1.x = rand()%(ScreenX);
-  F3.colision.P2 = {F3.colision.P1.x+F3.ancho, F3.colision.P1.y + SpritesHeight};
+    F3[i].sprite.img = SpriteAuto3;
+    F3[i].ancho = esat::SpriteWidth(F3[i].sprite.img);
+    F3[i].dir = LEFT;
+    F3[i].colision.P1.y = ScreenY-(SpritesHeight*5);
+    F3[i].colision.P1.x = rand()%(ScreenX);
+    F3[i].colision.P2 = {F3[i].colision.P1.x+F3[i].ancho, F3[i].colision.P1.y + SpritesHeight};
 
-  F4.sprite.img = SpriteAuto4;
-  F4.ancho = esat::SpriteWidth(F4.sprite.img);
-  F4.dir = RIGHT;
-  F4.colision.P1.y = ScreenY-(SpritesHeight*6);
-  F4.colision.P2.y = F4.colision.P1.y + SpritesHeight;
-  F4.colision.P1.x = rand()%(ScreenX);
-  F4.colision.P2 = {F4.colision.P1.x+F4.ancho, F4.colision.P1.y + SpritesHeight};
+    F4[i].sprite.img = SpriteAuto4;
+    F4[i].ancho = esat::SpriteWidth(F4[i].sprite.img);
+    F4[i].dir = RIGHT;
+    F4[i].colision.P1.y = ScreenY-(SpritesHeight*6);
+    F4[i].colision.P2.y = F4[i].colision.P1.y + SpritesHeight;
+    F4[i].colision.P1.x = rand()%(ScreenX);
+    F4[i].colision.P2 = {F4[i].colision.P1.x+F4[i].ancho, F4[i].colision.P1.y + SpritesHeight};
 
-  Camion.sprite.img = SpriteCamion;
-  Camion.ancho = esat::SpriteWidth(Camion.sprite.img);
-  Camion.dir = LEFT;
-  Camion.colision.P1.y = ScreenY-(SpritesHeight*7);
-  Camion.colision.P1.x = rand()%(ScreenX);
-  Camion.colision.P2 = {Camion.colision.P1.x+Camion.ancho, Camion.colision.P1.y + SpritesHeight};
+    F5[i].sprite.img = SpriteCamion;
+    F5[i].ancho = esat::SpriteWidth(F5[i].sprite.img);
+    F5[i].dir = LEFT;
+    F5[i].colision.P1.y = ScreenY-(SpritesHeight*7);
+    F5[i].colision.P1.x = rand()%(ScreenX);
+    F5[i].colision.P2 = {F5[i].colision.P1.x+F5[i].ancho, F5[i].colision.P1.y + SpritesHeight};
+  }
 }
 
 void DibujarFondo(){
@@ -403,32 +447,40 @@ void DibujarFondo(){
   esat::DrawSolidPath(Points,5);
 }
 
-int ResetAncho(int n1){
-  int respuesta;
-  respuesta = n1 + rand() % ((n1*3)-n1);
-  return respuesta;
+void ResetEspacio(Autos *A){
+  int newSpacing;
+  newSpacing = (A[1].ancho*2) + (rand() % (A[1].ancho*6)); //el +A*2 l inicio es para que no esten pegados + random de 0 a 3 veces el ancho de la imagen dando un maximo de espacio de 4 sprites entre autos
+  for(int i = 0; i<5; i++){
+    A[i].espacio = newSpacing;
+  }
 }
 
-int ResetVelocidad(){
-  int respuesta;
-  respuesta = 1 + rand() % 5;
-  return respuesta;
+void ResetVelocidad(Autos *A){
+  int newSpeed;
+  newSpeed = 3 + rand() % 5; //minimo 3 maximo 8 (5+3=8)
+  for(int i = 0; i<5; i++){
+    A[i].velocidad = newSpeed;
+  }
 }
 
 void CambiarValoresNivel(){
   if(Nivel >= LastNivel){
-    F1.espacio = ResetAncho(F1.ancho);
-    F2.espacio = ResetAncho(F2.ancho);
-    F3.espacio = ResetAncho(F3.ancho);
-    F4.espacio = ResetAncho(F4.ancho);
-    Camion.espacio = Camion.ancho + rand() % ((Camion.ancho*2) - Camion.ancho + 1);
+    ResetEspacio(F1);
+    ResetEspacio(F2);
+    ResetEspacio(F3);
+    ResetEspacio(F4);
 
-    F1.velocidad = ResetVelocidad();
-    F2.velocidad = ResetVelocidad();
-    F3.velocidad = ResetVelocidad();
-    F4.velocidad = ResetVelocidad();
-    Camion.velocidad = 3;
-    //parece que el camion no cambia de velocidad
+    ResetVelocidad(F1);
+    ResetVelocidad(F2);
+    ResetVelocidad(F3);
+    ResetVelocidad(F4);
+    
+    int esp = (F5[0].ancho*2) + (rand() % (F5[0].ancho*2));
+    for(int i = 0; i<5; i++){
+      F5[i].espacio = esp;
+      F5[i].velocidad = 3;
+    }
+    //parece que el F5 no cambia de velocidad
     LastNivel++;
   }
 }
@@ -470,6 +522,7 @@ void ReleaseOfSprites(){
 }
 
 int esat::main(int argc, char **argv) {
+  printf("x: %d Y: %d \n\n", ScreenX, ScreenY);
   srand(time(NULL));
   esat::WindowInit(ScreenX, ScreenY);
   WindowSetMouseVisibility(true);
@@ -491,6 +544,7 @@ int esat::main(int argc, char **argv) {
     DetectarInput();
 
     Dispaly();
+
 
     esat::DrawEnd();
     ControlFPS();
