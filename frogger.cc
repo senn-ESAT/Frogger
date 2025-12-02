@@ -35,7 +35,7 @@ struct Frog{
   Sprite sprite;
   Direccion dir;
   int vidas = 3, score;
-  float arriba;
+  int arriba;
 };
 
 //-------------Generales-------------
@@ -54,14 +54,13 @@ struct Autos{
 
 struct Tronco{
   Colision colision;
-  Sprite sprite;
-  int velocidad;
+  int velocidad, no, espacio;  //no es numero objetos, ose la cantidad de sprites
 };
 
 struct Tortuga{
   Colision colision;
   Sprite sprite;
-  int velocidad;
+  int velocidad, no, espacio;
   bool flota = true; //en plan esta abajo del agua?
 };
 
@@ -96,13 +95,13 @@ struct Mosca{
 struct RanaNPC{
   Colision colision;
   Sprite sprite;
-  int dir; //direccion -> 0 = arriba, 1=derecha, 2 = abajo, 3 = izquierda
+  int dir;
 };
 
 Frog Player1, Player2;
-SafeZone fin[5];
+Colision fin[5];
 Autos F1[5], F2[5], F3[5], F4[5], F5[5];
-Tronco W1[5], W2[5], W3[5];
+Tronco M1[5], M2[5], M3[5];
 Tortuga T1[5], T2[5];
 
 //Variables de sistema
@@ -254,13 +253,13 @@ void DibujarPiso(){
   //pasto arriba
   int Anchura = esat::SpriteWidth(SpriteMeta) + (esat::SpriteWidth(SpritePastoVerde)*2);
   for(int i = 0; i<5; i++){
-    if(fin[4].colision.P1.x == 0){
-      fin[i].colision.P1.x = (Anchura*i) + 24;
-      fin[i].colision.P1.y = 96;
-      fin[i].colision.P2.x = fin[i].colision.P1.x + 48;
-      fin[i].colision.P2.y = 144;
+    if(fin[4].P1.x == 0){
+      fin[i].P1.x = (Anchura*i) + 24;
+      fin[i].P1.y = 96;
+      fin[i].P2.x = fin[i].P1.x + 48;
+      fin[i].P2.y = 144;
     }
-    DibujarRectanguloColision(fin[i].colision, 0, 255, 255);
+    DibujarRectanguloColision(fin[i], 0, 255, 255);
     DibujarMeta(Anchura*i);
   }
 
@@ -328,6 +327,7 @@ void DibujarVeiculos(){
     esat::DrawSprite(F3[i].sprite.img, F3[0].colision.P1.x+(i*F3[i].espacio), F3[i].colision.P1.y);
     esat::DrawSprite(F4[i].sprite.img, F4[0].colision.P1.x+(i*F4[i].espacio), F4[i].colision.P1.y);
     esat::DrawSprite(F5[i].sprite.img, F5[0].colision.P1.x+(i*F5[i].espacio), F5[i].colision.P1.y);
+    
     DibujarRectanguloColision(F1[i].colision, 0, 255, 255);
     DibujarRectanguloColision(F2[i].colision, 0, 255, 255);
     DibujarRectanguloColision(F3[i].colision, 0, 255, 255);
@@ -438,6 +438,10 @@ void InicializarJugadores(){
 
 void InicializarAutos(){
   for(int i = 0; i < 5; i++) {
+    /*
+    el clculo de SprtieHeight*n es solo para calcular la fila
+    La fila 1 osea es SpriteHeight*1 es el footer, y 
+    */
     F1[i].sprite.img = SpriteAuto1;
     F1[i].ancho = esat::SpriteWidth(F1[i].sprite.img);
     F1[i].dir = LEFT;
@@ -471,7 +475,27 @@ void InicializarAutos(){
 }
 
 void InicializarFlotantes(){
-  
+  for(int i = 0; i<5; i++){
+    M1[i].no = 3;
+    M1[i].colision.P1.y = ScreenY-(SpritesHeight*10);
+    M1[i].colision.P2.y = M1[i].colision.P1.y+SpriteHeight;
+
+    M2[i].no = 6;
+    M2[i].colision.P1.y = ScreenY-(SpritesHeight*11);
+    M2[i].colision.P2.y = M2[i].colision.P1.y+SpriteHeight;
+
+    M3[i].no = 4;
+    M3.colision.P1.y = ScreenY-(SpritesHeight*13);
+    M3[i].colision.P2.y = M3[i].colision.P1.y+SpriteHeight;
+
+    T1[i].no = 3;
+    T1[i].colision.P1.y = ScreenY-(SpritesHeight*9);
+    T1[i].colision.P2.y = T1[i].colision.P1.y+SpriteHeight;
+
+    T2[i].no = 2;
+    T2[i].colision.P1.y = ScreenY-(SpritesHeight*12);
+    T2[i].colision.P2.y = T2[i].colision.P1.y+SpriteHeight;
+  }
 }
 
 void DibujarFondo(){
@@ -480,50 +504,60 @@ void DibujarFondo(){
   esat::DrawSolidPath(Points,5);
 }
 
-void ResetPosicionRandom(){
-  F1[0].colision.P1.x = rand()%(ScreenX);
-  F2[0].colision.P1.x = rand()%(ScreenX);
-  F3[0].colision.P1.x = rand()%(ScreenX);
-  F4[0].colision.P1.x = rand()%(ScreenX);
-  F5[0].colision.P1.x = rand()%(ScreenX);
-
-  F1[0].colision.P2.x = F1[0].colision.P1.x + F1[0].ancho;
-  F2[0].colision.P2.x = F2[0].colision.P1.x + F2[0].ancho;
-  F3[0].colision.P2.x = F3[0].colision.P1.x + F3[0].ancho;
-  F4[0].colision.P2.x = F4[0].colision.P1.x + F4[0].ancho;
-  F5[0].colision.P2.x = F5[0].colision.P1.x + F5[0].ancho;
+void ResetPosicionRandom(Colision coli){
+  coli.P1.x = rand()%(ScreenX/2);
+  coli.P2.x = coli.P1.x + 48;
 }
 
-void ResetEspacio(Autos *A){
+void ResetEspacio(Colision coli, int *spacing){
   int newSpacing;
-  newSpacing = (A[1].ancho*3) + (rand() % (A[1].ancho*6)); //el +A*2 l inicio es para que no esten pegados + random de 0 a 3 veces el ancho de la imagen dando un maximo de espacio de 4 sprites entre autos
+  newSpacing = (coli.P2.x+96) + (rand() % (48*6)); //el +A*2 l inicio es para que no esten pegados + random de 0 a 3 veces el ancho de la imagen dando un maximo de espacio de 4 sprites entre autos
   for(int i = 0; i<5; i++){
-    A[i].espacio = newSpacing;
+    spacing = newSpacing;
   }
 }
 
 void ResetVelocidad(Autos *A){
   int newSpeed;
-  newSpeed = 3 + rand() % 5; //minimo 3 maximo 8 (5+3=8)
+  newSpeed = Nivel + 3 + rand()%5; //minimo 3 maximo 8 (5+3=8) + 1 por cada nivel
   for(int i = 0; i<5; i++){
     A[i].velocidad = newSpeed;
   }
 }
 
+
+//WIP
 void CambiarValoresNivel(){
   if(Nivel >= LastNivel){
+    ResetPosicionRandom(F1[0].colision, F1[i].espacio);
+    ResetPosicionRandom(F2[0].colision, F2[i].espacio);
+    ResetPosicionRandom(F3[0].colision, F3[i].espacio);
+    ResetPosicionRandom(F4[0].colision, F4[i].espacio);
+    ResetPosicionRandom(F5[0].colision, F5[i].espacio);
 
-    ResetPosicionRandom();
+    for(int i = 0; i<4; i++){
+      ResetEspacio(F1[i].colision);
+      ResetEspacio(F2[i].colision);
+      ResetEspacio(F3[i].colision);
+      ResetEspacio(F4[i].colision);
+    }
     
-    ResetEspacio(F1);
-    ResetEspacio(F2);
-    ResetEspacio(F3);
-    ResetEspacio(F4);
-
     ResetVelocidad(F1);
     ResetVelocidad(F2);
     ResetVelocidad(F3);
     ResetVelocidad(F4);
+
+    ResetPosicionRandom(M1[0].colision);
+    ResetPosicionRandom(M2[0].colision);
+    ResetPosicionRandom(M3[0].colision);
+
+    ResetEspacio(F1);
+    ResetEspacio(F2);
+    ResetEspacio(F3);
+
+    ResetVelocidad(F1);
+    ResetVelocidad(F2);
+    ResetVelocidad(F3);
     
     int esp = (F5[0].ancho*2) + (rand() % (F5[0].ancho*2));
     for(int i = 0; i<5; i++){
@@ -603,11 +637,11 @@ int esat::main(int argc, char **argv) {
     esat::DrawBegin();
     CambiarValoresNivel();
 
-    DibujarFondo();
+    DibujarFondo(); //dibuja el background
 
     DetectarInput();
 
-    Dispaly();
+    Dispaly(); //Dibuja todos los objetos que se mueven
 
     esat::DrawEnd();
     ControlFPS();
