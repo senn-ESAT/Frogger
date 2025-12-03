@@ -110,7 +110,7 @@ const int ScreenX = 672, ScreenY = 768; //screen size
 unsigned char fps=25; //Control de frames por segundo
 double current_time, last_time;
 float Points[10] = {0,0,ScreenX,0,ScreenX,ScreenY/2,0,ScreenY/2,0,0}; //zona azul
-int TipoPantalla = 1, numPlayers = 1, highScore = 0, Nivel = 0, LastNivel = 0;
+int TipoPantalla = 0, TipoMenu = 1, numPlayers = 1, highScore = 0, Nivel = 0, LastNivel = 0, creditos = 0, ScoreList[5] = {0};
 
 //Sprite Handles
 //UI
@@ -185,8 +185,8 @@ void DibujarRectanguloColision(Colision colision, unsigned char r = 255, unsigne
 }
 
 void CalculoPuntos(Frog *Player){
-  if(Player.arriba < Player.colision.P1.y){
-    Player.score += 10;
+  if(Player->arriba < Player->colision.P1.y){
+    Player->score += 10;
   }
 }
 
@@ -219,7 +219,16 @@ void InputsInGame(){
 }
 
 void InputsInMenu(){
-  //TO-DO
+  if(TipoMenu > 0 && esat::IsSpecialKeyDown(esat::kSpecialKey_Left))
+    TipoMenu--;
+  if(TipoMenu < 2 && esat::IsSpecialKeyDown(esat::kSpecialKey_Right))
+    TipoMenu++;
+  if(TipoMenu == 1 && esat::IsSpecialKeyDown(esat::kSpecialKey_Up) && numPlayers > 1)
+    numPlayers--;
+  if(TipoMenu == 1 && esat::IsSpecialKeyDown(esat::kSpecialKey_Down) && numPlayers < 2)
+    numPlayers++;
+  if(creditos < 99 && esat::IsSpecialKeyDown(esat::kSpecialKey_Keypad_1))
+    creditos++;
 }
 
 void DetectarInput(){
@@ -232,15 +241,81 @@ void DetectarInput(){
 }
 
 /*******************************************************
-********************DIJUBOS*****************************
+********************DIJUBOS MENU************************
+*******************************************************/
+
+void DrawFrogger(){
+  //TO-DO y tambien cambiar el sprite
+}
+
+void DubujarMenu(){
+  //TO-DO animacion inicial de la ranas que FROGGER
+  switch(TipoMenu){
+    case 0:
+      DrawFrogger();
+
+      esat::DrawSetFillColor(255,255,255);
+      esat::DrawText((ScreenX/2)-120, SpritesHeight*6, "-POINT TABLE-");
+      esat::DrawText((ScreenX/2)-200, SpritesHeight*15, "KONAMI  a  1981");
+      
+      esat::DrawSetFillColor(255,255,0);
+      esat::DrawText((ScreenX/2)-300, SpritesHeight*7, "10 PTS FORRR EACH STEP");
+      esat::DrawText((ScreenX/2)-300, (SpritesHeight*8)+20, "50 PTS FOR EVERY FROG");
+      esat::DrawText((ScreenX/2)-300, (SpritesHeight*10)+20, "1000 PTS BY SAVING FROGS");
+      esat::DrawText((ScreenX/2)-300, (SpritesHeight*12)+20, "PLUS BONUS");
+
+      esat::DrawSetFillColor(255,0,0);
+      esat::DrawText((ScreenX/2)-300, SpritesHeight*9, "ARRIVED HOME SAFELY");
+      esat::DrawText((ScreenX/2)-300, SpritesHeight*11, "INTO FIVE HOMES");
+      esat::DrawText((ScreenX/2)-300, SpritesHeight*13, "10 PTS X REMAINING SECOND");
+    break;
+    case 1:
+      int PlayerSelection = 0;
+      esat::DrawSetFillColor(255,255,255);
+      esat::DrawText((ScreenX/2)-50, SpritesHeight*5, "PUSH");
+      esat::DrawText((ScreenX/2)-100, SpritesHeight*9, "ONE PLAYER");
+      esat::DrawText((ScreenX/2)-110, (SpritesHeight*10)+20, "TWO PLAYERS");
+      if(numPlayers == 1){
+        PlayerSelection = SpritesHeight*9;
+      }
+      else{
+        PlayerSelection = (SpritesHeight*10)+20;
+      }
+      esat::DrawText((ScreenX/2)-150, PlayerSelection, "->");
+
+      esat::DrawSetFillColor(255,192,203);
+      esat::DrawText((ScreenX/2)-120, (SpritesHeight*7), "START BUTTON");
+
+      esat::DrawSetFillColor(255,0,0);
+      esat::DrawText((ScreenX/2)-260, SpritesHeight*12, "ONE EXTRA FROGG 20000 PTS");
+    break;
+    case 2:
+      DrawFrogger();
+      esat::DrawSetFillColor(255,255,0);
+      esat::DrawText((ScreenX/2)-160, SpritesHeight*7, "SCORE RANKING");
+
+      esat::DrawSetFillColor(255,255,255);
+
+      esat::DrawText((ScreenX/2)-200, SpritesHeight*9,  "1 ST         PTS");
+      esat::DrawText((ScreenX/2)-200, SpritesHeight*10, "2 ND         PTS");
+      esat::DrawText((ScreenX/2)-200, SpritesHeight*11, "3 RD         PTS");
+      esat::DrawText((ScreenX/2)-200, SpritesHeight*12, "4 TH         PTS");
+      esat::DrawText((ScreenX/2)-200, SpritesHeight*13, "5 TH         PTS");
+
+      esat::DrawText((ScreenX/2)-200, SpritesHeight*15, "KONAMI  a  1981");
+    break;
+  }
+}
+
+/*******************************************************
+*****************DIJUBOS GAMEPLAY***********************
 *******************************************************/
 
 void DibujarJugador(){
   DibujarRectanguloColision(Player1.colision, 0, 255, 255);
   esat::DrawSprite(Player1.sprite.img, Player1.colision.P1.x, Player1.colision.P1.y);
-  if(numPlayers > 1){
+  if(numPlayers > 1)
     esat::DrawSprite(Player2.sprite.img, Player2.colision.P1.x, Player2.colision.P1.y);
-  }
 }
 
 void DibujarMeta(float X){
@@ -338,7 +413,7 @@ void DibujarVeiculos(){
 }
 
 void DibujarFlotantes(){
-
+  //TO-DO
 }
 
 void DibujarJuego(){
@@ -354,7 +429,7 @@ void DibujarCabecera(){
   //itoa de int a char
   itoa(Player1.score +100000, ScoreP1, 10);
   itoa(Player2.score +100000, ScoreP2, 10);
-  itoa(highScore +100000, highScoreChars, 10);
+  itoa(ScoreList[0] +100000, highScoreChars, 10);
 
   esat::DrawSetFillColor(255,255,255);
   
@@ -366,25 +441,38 @@ void DibujarCabecera(){
   esat::DrawText((ScreenX/2)-250, 43, ScoreP1+1);
   esat::DrawText((ScreenX/2)-60, 43, highScoreChars+1);
   if(numPlayers > 1)
-  esat::DrawText((ScreenX/2)+140, 25, ScoreP2+1);
+  esat::DrawText((ScreenX/2)+140, 43, ScoreP2+1);
+}
+
+void CalculoScorePlayer(int PTS){
+  int NewScore;
+  bool cambio = false;
+  for(int i = 0; i < 5; i++){
+    if(cambion = false){
+      if(PTS > ScoreList[i]){
+        int NewScore = i;
+        cambio = true;
+      }
+    }
+    else{
+      ScoreList[i+1] = ScoreList[i];
+      ScoreList[i] = NewScore;
+    }
+  }
 }
 
 //esto c llama al game over
-void GuardarHighScore() {
-    //Comprueba solo el jugador 1 al no tener modo 2 jugadores implementado
-    if (Player1.score > highScore) {
-      highScore = Player1.score;
-    }
-    if (Player2.score > highScore) {
-      highScore = Player2.score;
-    }
+void GuardarScore() {
+  //Comprueba solo el jugador 1 al no tener modo 2 jugadores implementado
+  CalculoScorePlayer(Player1.score);
+  CalculoScorePlayer(Player2.score);
 }
 
 void DibujarPantalla(){
   //TO-DO if in game (juego) o menu (animacion)
   switch(TipoPantalla){
     case 0:
-    //TO-DO DubujarMenu();
+    DubujarMenu();
     break;
     case 1:
     DibujarJuego();
@@ -478,23 +566,23 @@ void InicializarFlotantes(){
   for(int i = 0; i<5; i++){
     M1[i].no = 3;
     M1[i].colision.P1.y = ScreenY-(SpritesHeight*10);
-    M1[i].colision.P2.y = M1[i].colision.P1.y+SpriteHeight;
+    M1[i].colision.P2.y = M1[i].colision.P1.y+SpritesHeight;
 
     M2[i].no = 6;
     M2[i].colision.P1.y = ScreenY-(SpritesHeight*11);
-    M2[i].colision.P2.y = M2[i].colision.P1.y+SpriteHeight;
+    M2[i].colision.P2.y = M2[i].colision.P1.y+SpritesHeight;
 
     M3[i].no = 4;
-    M3.colision.P1.y = ScreenY-(SpritesHeight*13);
-    M3[i].colision.P2.y = M3[i].colision.P1.y+SpriteHeight;
+    M3[i].colision.P1.y = ScreenY-(SpritesHeight*13);
+    M3[i].colision.P2.y = M3[i].colision.P1.y+SpritesHeight;
 
     T1[i].no = 3;
     T1[i].colision.P1.y = ScreenY-(SpritesHeight*9);
-    T1[i].colision.P2.y = T1[i].colision.P1.y+SpriteHeight;
+    T1[i].colision.P2.y = T1[i].colision.P1.y+SpritesHeight;
 
     T2[i].no = 2;
     T2[i].colision.P1.y = ScreenY-(SpritesHeight*12);
-    T2[i].colision.P2.y = T2[i].colision.P1.y+SpriteHeight;
+    T2[i].colision.P2.y = T2[i].colision.P1.y+SpritesHeight;
   }
 }
 
@@ -504,82 +592,86 @@ void DibujarFondo(){
   esat::DrawSolidPath(Points,5);
 }
 
-void ResetPosicionRandom(Colision coli){
-  coli.P1.x = rand()%(ScreenX/2);
-  coli.P2.x = coli.P1.x + 48;
-}
+// void ResetPosicionRandom(Colision coli){
+//   coli.P1.x = rand()%(ScreenX/2);
+//   coli.P2.x = coli.P1.x + 48;
+// }
 
-void ResetEspacio(Colision coli, int *spacing){
-  int newSpacing;
-  newSpacing = (coli.P2.x+96) + (rand() % (48*6)); //el +A*2 l inicio es para que no esten pegados + random de 0 a 3 veces el ancho de la imagen dando un maximo de espacio de 4 sprites entre autos
-  for(int i = 0; i<5; i++){
-    spacing = newSpacing;
-  }
-}
+// void ResetEspacio(Colision coli, int *spacing){
+//   int newSpacing;
+//   newSpacing = (coli.P2.x+96) + (rand() % (48*6)); //el +A*2 l inicio es para que no esten pegados + random de 0 a 3 veces el ancho de la imagen dando un maximo de espacio de 4 sprites entre autos
+//   for(int i = 0; i<5; i++){
+//     spacing = newSpacing;
+//   }
+// }
 
-void ResetVelocidad(Autos *A){
-  int newSpeed;
-  newSpeed = Nivel + 3 + rand()%5; //minimo 3 maximo 8 (5+3=8) + 1 por cada nivel
-  for(int i = 0; i<5; i++){
-    A[i].velocidad = newSpeed;
-  }
-}
+// void ResetVelocidad(Autos *A){
+//   int newSpeed;
+//   newSpeed = Nivel + 3 + rand()%5; //minimo 3 maximo 8 (5+3=8) + 1 por cada nivel
+//   for(int i = 0; i<5; i++){
+//     A[i].velocidad = newSpeed;
+//   }
+// }
 
 
-//WIP
-void CambiarValoresNivel(){
-  if(Nivel >= LastNivel){
-    ResetPosicionRandom(F1[0].colision, F1[i].espacio);
-    ResetPosicionRandom(F2[0].colision, F2[i].espacio);
-    ResetPosicionRandom(F3[0].colision, F3[i].espacio);
-    ResetPosicionRandom(F4[0].colision, F4[i].espacio);
-    ResetPosicionRandom(F5[0].colision, F5[i].espacio);
+// //WIP
+// void CambiarValoresNivel(){
+//   if(Nivel >= LastNivel){
+//     ResetPosicionRandom(F1[0].colision, F1[i].espacio);
+//     ResetPosicionRandom(F2[0].colision, F2[i].espacio);
+//     ResetPosicionRandom(F3[0].colision, F3[i].espacio);
+//     ResetPosicionRandom(F4[0].colision, F4[i].espacio);
+//     ResetPosicionRandom(F5[0].colision, F5[i].espacio);
 
-    for(int i = 0; i<4; i++){
-      ResetEspacio(F1[i].colision);
-      ResetEspacio(F2[i].colision);
-      ResetEspacio(F3[i].colision);
-      ResetEspacio(F4[i].colision);
-    }
+//     for(int i = 0; i<4; i++){
+//       ResetEspacio(F1[i].colision);
+//       ResetEspacio(F2[i].colision);
+//       ResetEspacio(F3[i].colision);
+//       ResetEspacio(F4[i].colision);
+//     }
     
-    ResetVelocidad(F1);
-    ResetVelocidad(F2);
-    ResetVelocidad(F3);
-    ResetVelocidad(F4);
+//     ResetVelocidad(F1);
+//     ResetVelocidad(F2);
+//     ResetVelocidad(F3);
+//     ResetVelocidad(F4);
 
-    ResetPosicionRandom(M1[0].colision);
-    ResetPosicionRandom(M2[0].colision);
-    ResetPosicionRandom(M3[0].colision);
+//     ResetPosicionRandom(M1[0].colision);
+//     ResetPosicionRandom(M2[0].colision);
+//     ResetPosicionRandom(M3[0].colision);
 
-    ResetEspacio(F1);
-    ResetEspacio(F2);
-    ResetEspacio(F3);
+//     ResetEspacio(F1);
+//     ResetEspacio(F2);
+//     ResetEspacio(F3);
 
-    ResetVelocidad(F1);
-    ResetVelocidad(F2);
-    ResetVelocidad(F3);
+//     ResetVelocidad(F1);
+//     ResetVelocidad(F2);
+//     ResetVelocidad(F3);
     
-    int esp = (F5[0].ancho*2) + (rand() % (F5[0].ancho*2));
-    for(int i = 0; i<5; i++){
-      F5[i].espacio = esp;
-      F5[i].velocidad = 3;
-      if(i>=1){
-        F1[i].colision.P1.x = F1[i-1].colision.P1.x+F1[i].espacio;
-        F2[i].colision.P1.x = F2[i-1].colision.P1.x+F2[i].espacio;
-        F3[i].colision.P1.x = F3[i-1].colision.P1.x+F3[i].espacio;
-        F4[i].colision.P1.x = F4[i-1].colision.P1.x+F4[i].espacio;
-        F5[i].colision.P1.x = F5[i-1].colision.P1.x+F5[i].espacio;
+//     int esp = (F5[0].ancho*2) + (rand() % (F5[0].ancho*2));
+//     for(int i = 0; i<5; i++){
+//       F5[i].espacio = esp;
+//       F5[i].velocidad = 3;
+//       if(i>=1){
+//         F1[i].colision.P1.x = F1[i-1].colision.P1.x+F1[i].espacio;
+//         F2[i].colision.P1.x = F2[i-1].colision.P1.x+F2[i].espacio;
+//         F3[i].colision.P1.x = F3[i-1].colision.P1.x+F3[i].espacio;
+//         F4[i].colision.P1.x = F4[i-1].colision.P1.x+F4[i].espacio;
+//         F5[i].colision.P1.x = F5[i-1].colision.P1.x+F5[i].espacio;
 
-        F1[i].colision.P2 = {F1[i].colision.P1.x+F1[i].ancho, F1[i].colision.P1.y + SpritesHeight};
-        F2[i].colision.P2 = {F2[i].colision.P1.x+F2[i].ancho, F2[i].colision.P1.y + SpritesHeight};
-        F3[i].colision.P2 = {F3[i].colision.P1.x+F3[i].ancho, F3[i].colision.P1.y + SpritesHeight};
-        F4[i].colision.P2 = {F4[i].colision.P1.x+F4[i].ancho, F4[i].colision.P1.y + SpritesHeight};
-        F5[i].colision.P2 = {F5[i].colision.P1.x+F5[i].ancho, F5[i].colision.P1.y + SpritesHeight};
-      }
-    }
-    //parece que el F5 no cambia de velocidad
-    LastNivel++;
-  }
+//         F1[i].colision.P2 = {F1[i].colision.P1.x+F1[i].ancho, F1[i].colision.P1.y + SpritesHeight};
+//         F2[i].colision.P2 = {F2[i].colision.P1.x+F2[i].ancho, F2[i].colision.P1.y + SpritesHeight};
+//         F3[i].colision.P2 = {F3[i].colision.P1.x+F3[i].ancho, F3[i].colision.P1.y + SpritesHeight};
+//         F4[i].colision.P2 = {F4[i].colision.P1.x+F4[i].ancho, F4[i].colision.P1.y + SpritesHeight};
+//         F5[i].colision.P2 = {F5[i].colision.P1.x+F5[i].ancho, F5[i].colision.P1.y + SpritesHeight};
+//       }
+//     }
+//     //parece que el F5 no cambia de velocidad
+//     LastNivel++;
+//   }
+// }
+
+void ScoreList(){
+
 }
 
 void ControlFPS(){
@@ -635,7 +727,7 @@ int esat::main(int argc, char **argv) {
   while(esat::WindowIsOpened() && !esat::IsSpecialKeyDown(esat::kSpecialKey_Escape)){
     last_time = esat::Time();
     esat::DrawBegin();
-    CambiarValoresNivel();
+    //CambiarValoresNivel();
 
     DibujarFondo(); //dibuja el background
 
