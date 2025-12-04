@@ -50,6 +50,7 @@ struct Autos{
   Sprite sprite;
   Direccion dir;
   int velocidad, ancho, espacio;
+  int velocidad, espacio;
 };
 
 struct Tronco{
@@ -368,24 +369,28 @@ void RetrocederAutos(Autos *A){
     for (int i = 0; i < 5; i++) { // [<      ]
       A[i].colision.P1.x += A[i].espacio;
       A[i].colision.P2.x = A[i].colision.P1.x+A[i].ancho;
+      A[i].colision.P2.x = A[i].colision.P1.x+esat::SpriteWidth(A[i].sprite.img);
     }
   }
 }
 
 void NoSalirDePantalla(){
   if(F1[0].colision.P1.x < (0-F1[0].ancho)){ //si el de la izquierda sale de pantalla por la dimension de su sprite
+  if(F1[0].colision.P1.x < (0-esat::SpriteWidth(F1[0].sprite.img))){ //si el de la izquierda sale de pantalla por la dimension de su sprite
     RetrocederAutos(F1);
   }
   if(F2[4].colision.P1.x > ScreenX){  //si sale a la derecha
     RetrocederAutos(F2);
   }
   if(F3[0].colision.P1.x < (0-F3[0].ancho)){
+  if(F3[0].colision.P1.x < (0-esat::SpriteWidth(F3[0].sprite.img))){
     RetrocederAutos(F3);
   }
   if(F4[4].colision.P1.x > ScreenX){
     RetrocederAutos(F4);
   }
   if(F5[0].colision.P1.x <  (0-F5[0].ancho)){
+  if(F5[0].colision.P1.x <  (0-esat::SpriteWidth(F5[0].sprite.img))){
     RetrocederAutos(F5);
   }
 }
@@ -592,6 +597,7 @@ void DibujarFondo(){
   esat::DrawSolidPath(Points,5);
 }
 
+<<<<<<< Updated upstream
 // void ResetPosicionRandom(Colision coli){
 //   coli.P1.x = rand()%(ScreenX/2);
 //   coli.P2.x = coli.P1.x + 48;
@@ -612,8 +618,38 @@ void DibujarFondo(){
 //     A[i].velocidad = newSpeed;
 //   }
 // }
+=======
+void ResetPosicionRandom(Colision *coli){
+  coli->P1.x = rand()%(ScreenX/2);
+  coli->P2.x = coli->P1.x + 48;
+}
 
+void ResetEspacio(int *spacing){
+  int newSpacing;
+  newSpacing = 96 + (rand() % (48*6)); //el +96 al inicio es para que no esten pegados + random de 0 a 3 veces el ancho de la imagen dando un maximo de espacio de 4 sprites entre autos
 
+  *spacing = newSpacing;
+  
+}
+
+void ResetVelocidad(int *speed){
+  int newSpeed;
+  newSpeed = Nivel + 3 + rand()%5; //minimo 3 maximo 8 (5+3=8) + 1 por cada nivel
+  *speed = newSpeed;  
+}
+
+void ResetAutos(Autos *A){
+  for(int i = 1; i<5; i++){
+    A[i].espacio = A[0].espacio;
+    A[i].colision.P1.x = A[i-1].colision.P1.x+F1[i].espacio;
+    A[i].colision.P2 = {A[i].colision.P1.x+esat::SpriteWidth(A[i].sprite.img), A[i].colision.P1.y + SpritesHeight};
+  }
+}
+>>>>>>> Stashed changes
+
+void ResetFlotantes(){
+
+<<<<<<< Updated upstream
 // //WIP
 // void CambiarValoresNivel(){
 //   if(Nivel >= LastNivel){
@@ -672,6 +708,88 @@ void DibujarFondo(){
 
 void ScoreList(){
 
+=======
+}
+
+//Que horror
+//Lo odio
+//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+void CambiarValoresNivel(){
+  if(Nivel >= LastNivel){
+    int vF1, vF2, vF3, vF4, vM1, vM2, vM3, vT1, vT2, esp;
+    ResetVelocidad(&vF1);
+    ResetVelocidad(&vF2);
+    ResetVelocidad(&vF3);
+    ResetVelocidad(&vF4);
+    ResetVelocidad(&vM1);
+    ResetVelocidad(&vM2);
+    ResetVelocidad(&vM3);
+    ResetVelocidad(&vT1);
+    ResetVelocidad(&vT2);
+
+    //Cambio valores de la velocidad y el espacio de los objetos que se muvene,  y las coliciones tambien
+    //Los objetos que c mueven son los autos, Los troncos y las tortugas
+    ResetPosicionRandom(&F1[0].colision);
+    ResetPosicionRandom(&F2[0].colision);
+    ResetPosicionRandom(&F3[0].colision);
+    ResetPosicionRandom(&F4[0].colision);
+    ResetPosicionRandom(&F5[0].colision);
+    
+    ResetPosicionRandom(&M1[0].colision);
+    ResetPosicionRandom(&M2[0].colision);
+    ResetPosicionRandom(&M3[0].colision);
+
+    ResetPosicionRandom(&T1[0].colision);
+    ResetPosicionRandom(&T1[0].colision);
+
+    ResetEspacio(&F1[0].espacio);
+    ResetEspacio(&F1[0].espacio);
+    ResetEspacio(&F1[0].espacio);
+    ResetEspacio(&F1[0].espacio);
+
+    ResetEspacio(&M1[0].espacio);
+    ResetEspacio(&M2[0].espacio);
+    ResetEspacio(&M3[0].espacio);
+
+    ResetEspacio(&T1[0].espacio);
+    ResetEspacio(&T2[0].espacio);
+
+    ResetAutos(F1);
+    ResetAutos(F2);
+    ResetAutos(F3);
+    ResetAutos(F4);
+    ResetAutos(F5);
+
+    // ResetFlotantes(M1);
+    // ResetFlotantes(M2);
+    // ResetFlotantes(M3);
+
+    // ResetFlotantes(T1);
+    // ResetFlotantes(T2);
+
+    esp = (esat::SpriteWidth(F5[0].sprite.img)*2) + (rand() % (esat::SpriteWidth(F5[0].sprite.img)*2));
+    for(int i = 0; i<5; i++){
+      F1[i].velocidad = vF1;
+      F2[i].velocidad = vF2;
+      F3[i].velocidad = vF3;
+      F4[i].velocidad = vF4;
+
+      //troncos
+      M1[i].velocidad = vM1;
+      M2[i].velocidad = vM2;
+      M3[i].velocidad = vM3;
+
+      //Tortugas
+      T1[i].velocidad = vT1;
+      T2[i].velocidad = vT2;
+
+      F5[i].espacio = esp;
+      F5[i].velocidad = 3;
+    }
+    //parece que el F5 no cambia de velocidad
+    LastNivel++;
+  }
+>>>>>>> Stashed changes
 }
 
 void ControlFPS(){
