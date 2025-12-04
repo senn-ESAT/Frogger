@@ -49,7 +49,6 @@ struct Autos{
   Colision colision;
   Sprite sprite;
   Direccion dir;
-  int velocidad, ancho, espacio;
   int velocidad, espacio;
 };
 
@@ -368,28 +367,24 @@ void RetrocederAutos(Autos *A){
   else { // LEFT
     for (int i = 0; i < 5; i++) { // [<      ]
       A[i].colision.P1.x += A[i].espacio;
-      A[i].colision.P2.x = A[i].colision.P1.x+A[i].ancho;
       A[i].colision.P2.x = A[i].colision.P1.x+esat::SpriteWidth(A[i].sprite.img);
     }
   }
 }
 
 void NoSalirDePantalla(){
-  if(F1[0].colision.P1.x < (0-F1[0].ancho)){ //si el de la izquierda sale de pantalla por la dimension de su sprite
   if(F1[0].colision.P1.x < (0-esat::SpriteWidth(F1[0].sprite.img))){ //si el de la izquierda sale de pantalla por la dimension de su sprite
     RetrocederAutos(F1);
   }
   if(F2[4].colision.P1.x > ScreenX){  //si sale a la derecha
     RetrocederAutos(F2);
   }
-  if(F3[0].colision.P1.x < (0-F3[0].ancho)){
   if(F3[0].colision.P1.x < (0-esat::SpriteWidth(F3[0].sprite.img))){
     RetrocederAutos(F3);
   }
   if(F4[4].colision.P1.x > ScreenX){
     RetrocederAutos(F4);
   }
-  if(F5[0].colision.P1.x <  (0-F5[0].ancho)){
   if(F5[0].colision.P1.x <  (0-esat::SpriteWidth(F5[0].sprite.img))){
     RetrocederAutos(F5);
   }
@@ -536,31 +531,26 @@ void InicializarAutos(){
     La fila 1 osea es SpriteHeight*1 es el footer, y 
     */
     F1[i].sprite.img = SpriteAuto1;
-    F1[i].ancho = esat::SpriteWidth(F1[i].sprite.img);
     F1[i].dir = LEFT;
     F1[i].colision.P1.y = ScreenY-(SpritesHeight*3);
     F1[i].colision.P2.y = F1[i].colision.P1.y + SpritesHeight;
 
     F2[i].sprite.img = SpriteAuto2;
-    F2[i].ancho = esat::SpriteWidth(F2[i].sprite.img);
     F2[i].dir = RIGHT;
     F2[i].colision.P1.y = ScreenY-(SpritesHeight*4);
     F2[i].colision.P2.y = F2[i].colision.P1.y + SpritesHeight;
 
     F3[i].sprite.img = SpriteAuto3;
-    F3[i].ancho = esat::SpriteWidth(F3[i].sprite.img);
     F3[i].dir = LEFT;
     F3[i].colision.P1.y = ScreenY-(SpritesHeight*5);
     F3[i].colision.P2.y = F3[i].colision.P1.y + SpritesHeight;
 
     F4[i].sprite.img = SpriteAuto4;
-    F4[i].ancho = esat::SpriteWidth(F4[i].sprite.img);
     F4[i].dir = RIGHT;
     F4[i].colision.P1.y = ScreenY-(SpritesHeight*6);
     F4[i].colision.P2.y = F4[i].colision.P1.y + SpritesHeight;
 
     F5[i].sprite.img = SpriteCamion;
-    F5[i].ancho = esat::SpriteWidth(F5[i].sprite.img);
     F5[i].dir = LEFT;
     F5[i].colision.P1.y = ScreenY-(SpritesHeight*7);
     F5[i].colision.P2.y = F5[i].colision.P1.y + SpritesHeight;
