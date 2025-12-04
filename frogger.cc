@@ -587,28 +587,6 @@ void DibujarFondo(){
   esat::DrawSolidPath(Points,5);
 }
 
-<<<<<<< Updated upstream
-// void ResetPosicionRandom(Colision coli){
-//   coli.P1.x = rand()%(ScreenX/2);
-//   coli.P2.x = coli.P1.x + 48;
-// }
-
-// void ResetEspacio(Colision coli, int *spacing){
-//   int newSpacing;
-//   newSpacing = (coli.P2.x+96) + (rand() % (48*6)); //el +A*2 l inicio es para que no esten pegados + random de 0 a 3 veces el ancho de la imagen dando un maximo de espacio de 4 sprites entre autos
-//   for(int i = 0; i<5; i++){
-//     spacing = newSpacing;
-//   }
-// }
-
-// void ResetVelocidad(Autos *A){
-//   int newSpeed;
-//   newSpeed = Nivel + 3 + rand()%5; //minimo 3 maximo 8 (5+3=8) + 1 por cada nivel
-//   for(int i = 0; i<5; i++){
-//     A[i].velocidad = newSpeed;
-//   }
-// }
-=======
 void ResetPosicionRandom(Colision *coli){
   coli->P1.x = rand()%(ScreenX/2);
   coli->P2.x = coli->P1.x + 48;
@@ -635,70 +613,9 @@ void ResetAutos(Autos *A){
     A[i].colision.P2 = {A[i].colision.P1.x+esat::SpriteWidth(A[i].sprite.img), A[i].colision.P1.y + SpritesHeight};
   }
 }
->>>>>>> Stashed changes
 
 void ResetFlotantes(){
 
-<<<<<<< Updated upstream
-// //WIP
-// void CambiarValoresNivel(){
-//   if(Nivel >= LastNivel){
-//     ResetPosicionRandom(F1[0].colision, F1[i].espacio);
-//     ResetPosicionRandom(F2[0].colision, F2[i].espacio);
-//     ResetPosicionRandom(F3[0].colision, F3[i].espacio);
-//     ResetPosicionRandom(F4[0].colision, F4[i].espacio);
-//     ResetPosicionRandom(F5[0].colision, F5[i].espacio);
-
-//     for(int i = 0; i<4; i++){
-//       ResetEspacio(F1[i].colision);
-//       ResetEspacio(F2[i].colision);
-//       ResetEspacio(F3[i].colision);
-//       ResetEspacio(F4[i].colision);
-//     }
-    
-//     ResetVelocidad(F1);
-//     ResetVelocidad(F2);
-//     ResetVelocidad(F3);
-//     ResetVelocidad(F4);
-
-//     ResetPosicionRandom(M1[0].colision);
-//     ResetPosicionRandom(M2[0].colision);
-//     ResetPosicionRandom(M3[0].colision);
-
-//     ResetEspacio(F1);
-//     ResetEspacio(F2);
-//     ResetEspacio(F3);
-
-//     ResetVelocidad(F1);
-//     ResetVelocidad(F2);
-//     ResetVelocidad(F3);
-    
-//     int esp = (F5[0].ancho*2) + (rand() % (F5[0].ancho*2));
-//     for(int i = 0; i<5; i++){
-//       F5[i].espacio = esp;
-//       F5[i].velocidad = 3;
-//       if(i>=1){
-//         F1[i].colision.P1.x = F1[i-1].colision.P1.x+F1[i].espacio;
-//         F2[i].colision.P1.x = F2[i-1].colision.P1.x+F2[i].espacio;
-//         F3[i].colision.P1.x = F3[i-1].colision.P1.x+F3[i].espacio;
-//         F4[i].colision.P1.x = F4[i-1].colision.P1.x+F4[i].espacio;
-//         F5[i].colision.P1.x = F5[i-1].colision.P1.x+F5[i].espacio;
-
-//         F1[i].colision.P2 = {F1[i].colision.P1.x+F1[i].ancho, F1[i].colision.P1.y + SpritesHeight};
-//         F2[i].colision.P2 = {F2[i].colision.P1.x+F2[i].ancho, F2[i].colision.P1.y + SpritesHeight};
-//         F3[i].colision.P2 = {F3[i].colision.P1.x+F3[i].ancho, F3[i].colision.P1.y + SpritesHeight};
-//         F4[i].colision.P2 = {F4[i].colision.P1.x+F4[i].ancho, F4[i].colision.P1.y + SpritesHeight};
-//         F5[i].colision.P2 = {F5[i].colision.P1.x+F5[i].ancho, F5[i].colision.P1.y + SpritesHeight};
-//       }
-//     }
-//     //parece que el F5 no cambia de velocidad
-//     LastNivel++;
-//   }
-// }
-
-void ScoreList(){
-
-=======
 }
 
 //Que horror
@@ -779,7 +696,6 @@ void CambiarValoresNivel(){
     //parece que el F5 no cambia de velocidad
     LastNivel++;
   }
->>>>>>> Stashed changes
 }
 
 void ControlFPS(){
