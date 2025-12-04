@@ -110,7 +110,7 @@ const int ScreenX = 672, ScreenY = 768; //screen size
 unsigned char fps=25; //Control de frames por segundo
 double current_time, last_time;
 float Points[10] = {0,0,ScreenX,0,ScreenX,ScreenY/2,0,ScreenY/2,0,0}; //zona azul
-int TipoPantalla = 0, TipoMenu = 1, numPlayers = 1, highScore = 0, Nivel = 0, LastNivel = 0, creditos = 0, ScoreList[5] = {0};
+int TipoPantalla = 0, TipoMenu = 0, numPlayers = 1, highScore = 0, Nivel = 0, LastNivel = 0, creditos = 0, ScoreList[5] = {0};
 
 //Sprite Handles
 //UI
@@ -229,6 +229,10 @@ void InputsInMenu(){
     numPlayers++;
   if(creditos < 99 && esat::IsSpecialKeyDown(esat::kSpecialKey_Keypad_1))
     creditos++;
+  if(TipoMenu == 1 && creditos > 0 && esat::IsSpecialKeyDown(esat::kSpecialKey_Enter)){
+    TipoPantalla = 1;
+    creditos--;
+  }
 }
 
 void DetectarInput(){
@@ -270,7 +274,7 @@ void DubujarMenu(){
       esat::DrawText((ScreenX/2)-300, SpritesHeight*13, "10 PTS X REMAINING SECOND");
     break;
     case 1:
-      int PlayerSelection = 0;
+      int PlayerSelection;
       esat::DrawSetFillColor(255,255,255);
       esat::DrawText((ScreenX/2)-50, SpritesHeight*5, "PUSH");
       esat::DrawText((ScreenX/2)-100, SpritesHeight*9, "ONE PLAYER");
@@ -301,8 +305,8 @@ void DubujarMenu(){
       esat::DrawText((ScreenX/2)-200, SpritesHeight*11, "3 RD         PTS");
       esat::DrawText((ScreenX/2)-200, SpritesHeight*12, "4 TH         PTS");
       esat::DrawText((ScreenX/2)-200, SpritesHeight*13, "5 TH         PTS");
-
-      esat::DrawText((ScreenX/2)-200, SpritesHeight*15, "KONAMI  a  1981");
+      //TO-DO puntos de ScoreList
+      esat::DrawText((ScreenX/2)-180, SpritesHeight*15, "KONAMI  a  1981");
     break;
   }
 }
@@ -345,15 +349,13 @@ void DibujarPiso(){
   }
 }
 
-void MoverObjeto(Autos *A){
-  for (int i = 0; i < 5; i++) {
-    if (A[i].dir == RIGHT) {
-      A[i].colision.P1.x += A[i].velocidad;
-      A[i].colision.P2.x += A[i].velocidad;
-    } else { // LEFT
-      A[i].colision.P1.x -= A[i].velocidad;
-      A[i].colision.P2.x -= A[i].velocidad;
-    }
+void MoverObjeto(Colision *coli, Direccion dire, int speed){
+  if (dire == RIGHT) {
+    coli->P1.x += speed;
+    coli->P2.x += speed;
+  } else { // LEFT
+    coli->P1.x -= speed;
+    coli->P2.x -= speed;
   }
 }
 
@@ -367,47 +369,49 @@ void RetrocederAutos(Autos *A){
   else { // LEFT
     for (int i = 0; i < 5; i++) { // [<      ]
       A[i].colision.P1.x += A[i].espacio;
-      A[i].colision.P2.x = A[i].colision.P1.x+esat::SpriteWidth(A[i].sprite.img);
+      A[i].colision.P2.x += A[i].espacio;
     }
   }
 }
 
 void NoSalirDePantalla(){
-  if(F1[0].colision.P1.x < (0-esat::SpriteWidth(F1[0].sprite.img))){ //si el de la izquierda sale de pantalla por la dimension de su sprite
+  if(F1[0].colision.P1.x < -48){ //si el de la izquierda sale de pantalla por la dimension de su sprite
     RetrocederAutos(F1);
   }
   if(F2[4].colision.P1.x > ScreenX){  //si sale a la derecha
     RetrocederAutos(F2);
   }
-  if(F3[0].colision.P1.x < (0-esat::SpriteWidth(F3[0].sprite.img))){
+  if(F3[0].colision.P1.x < -48){
     RetrocederAutos(F3);
   }
   if(F4[4].colision.P1.x > ScreenX){
     RetrocederAutos(F4);
   }
-  if(F5[0].colision.P1.x <  (0-esat::SpriteWidth(F5[0].sprite.img))){
+  if(F5[0].colision.P1.x < -48){
     RetrocederAutos(F5);
   }
 }
 
 void DibujarVeiculos(){
-  MoverObjeto(F1);
-  MoverObjeto(F2);
-  MoverObjeto(F3);
-  MoverObjeto(F4);
-  MoverObjeto(F5);
   for(int i = 0; i < 5; i++){
-    esat::DrawSprite(F1[i].sprite.img, F1[0].colision.P1.x+(i*F1[i].espacio), F1[i].colision.P1.y); 
-    esat::DrawSprite(F2[i].sprite.img, F2[0].colision.P1.x+(i*F2[i].espacio), F2[i].colision.P1.y);
-    esat::DrawSprite(F3[i].sprite.img, F3[0].colision.P1.x+(i*F3[i].espacio), F3[i].colision.P1.y);
-    esat::DrawSprite(F4[i].sprite.img, F4[0].colision.P1.x+(i*F4[i].espacio), F4[i].colision.P1.y);
-    esat::DrawSprite(F5[i].sprite.img, F5[0].colision.P1.x+(i*F5[i].espacio), F5[i].colision.P1.y);
+    MoverObjeto(&F1[i].colision, F1[i].dir, F1[i].velocidad);
+    MoverObjeto(&F2[i].colision, F2[i].dir, F2[i].velocidad);
+    MoverObjeto(&F3[i].colision, F3[i].dir, F3[i].velocidad);
+    MoverObjeto(&F4[i].colision, F4[i].dir, F4[i].velocidad);
+    MoverObjeto(&F5[i].colision, F5[i].dir, F5[i].velocidad);
+
+    esat::DrawSprite(F1[i].sprite.img, F1[i].colision.P1.x, F1[i].colision.P1.y); 
+    esat::DrawSprite(F2[i].sprite.img, F2[i].colision.P1.x, F2[i].colision.P1.y);
+    esat::DrawSprite(F3[i].sprite.img, F3[i].colision.P1.x, F3[i].colision.P1.y);
+    esat::DrawSprite(F4[i].sprite.img, F4[i].colision.P1.x, F4[i].colision.P1.y);
+    esat::DrawSprite(F5[i].sprite.img, F5[i].colision.P1.x, F5[i].colision.P1.y);
     
-    DibujarRectanguloColision(F1[i].colision, 0, 255, 255);
-    DibujarRectanguloColision(F2[i].colision, 0, 255, 255);
-    DibujarRectanguloColision(F3[i].colision, 0, 255, 255);
-    DibujarRectanguloColision(F4[i].colision, 0, 255, 255);
-    DibujarRectanguloColision(F5[i].colision, 0, 255, 255);
+    DibujarRectanguloColision(F1[i].colision, 255, 0, 0);
+    printf("-%f-%d-\n", F1[0].colision.P1.x, i);
+    DibujarRectanguloColision(F2[i].colision, 255, 0, 0);
+    DibujarRectanguloColision(F3[i].colision, 255, 0, 0);
+    DibujarRectanguloColision(F4[i].colision, 255, 0, 0);
+    DibujarRectanguloColision(F5[i].colision, 255, 0, 0);
   }
   NoSalirDePantalla();  //controla si el auto se sale de la pantalla
 }
@@ -445,10 +449,10 @@ void DibujarCabecera(){
 }
 
 void CalculoScorePlayer(int PTS){
-  int NewScore;
+  int NewScore = 0;
   bool cambio = false;
   for(int i = 0; i < 5; i++){
-    if(cambion = false){
+    if(cambio = false){
       if(PTS > ScoreList[i]){
         int NewScore = i;
         cambio = true;
@@ -456,16 +460,18 @@ void CalculoScorePlayer(int PTS){
     }
     else{
       ScoreList[i+1] = ScoreList[i];
-      ScoreList[i] = NewScore;
+      if(i == NewScore){
+        ScoreList[NewScore] = PTS;
+      }
     }
   }
 }
 
 //esto c llama al game over
 void GuardarScore() {
-  //Comprueba solo el jugador 1 al no tener modo 2 jugadores implementado
   CalculoScorePlayer(Player1.score);
-  CalculoScorePlayer(Player2.score);
+  if(numPlayers>1)
+    CalculoScorePlayer(Player2.score);
 }
 
 void DibujarPantalla(){
@@ -495,6 +501,17 @@ void DibujarVidas(){
   }
 }
 
+void DibujarCreditos(){
+  //itoa de int a char
+  char coins[2];
+  itoa(creditos+100, coins, 10);
+
+  esat::DrawSetFillColor(144,213,255);
+  
+  esat::DrawText(ScreenX-180, ScreenY-40, "CREDIT");
+  esat::DrawText(ScreenX-50, ScreenY-40, coins+1);
+}
+
 void DibujarPie(){
   if(TipoPantalla == 1){
     DibujarVidas();
@@ -502,11 +519,11 @@ void DibujarPie(){
     //TO-DO TibujarTime();
   }
   else{
-    //TO-DO display creditos
+    DibujarCreditos();
   }
 }
 
-void Dispaly(){
+void Display(){
   DibujarCabecera();
   DibujarPantalla();
   DibujarPie();
@@ -587,17 +604,18 @@ void DibujarFondo(){
   esat::DrawSolidPath(Points,5);
 }
 
-void ResetPosicionRandom(Colision *coli){
-  coli->P1.x = rand()%(ScreenX/2);
-  coli->P2.x = coli->P1.x + 48;
+Colision ResetPosicionRandom(){
+  Colision coli;
+  coli.P1.x = rand()%(ScreenX/2);
+  coli.P2.x = coli.P1.x + 48;
+  return coli;
 }
 
-void ResetEspacio(int *spacing){
+int ResetEspacio(){
   int newSpacing;
   newSpacing = 96 + (rand() % (48*6)); //el +96 al inicio es para que no esten pegados + random de 0 a 3 veces el ancho de la imagen dando un maximo de espacio de 4 sprites entre autos
 
-  *spacing = newSpacing;
-  
+  return newSpacing;
 }
 
 void ResetVelocidad(int *speed){
@@ -606,8 +624,9 @@ void ResetVelocidad(int *speed){
   *speed = newSpeed;  
 }
 
-void ResetAutos(Autos *A){
+void ResetAutos(Autos *A, int vel){
   for(int i = 1; i<5; i++){
+    A[i].velocidad=vel;
     A[i].espacio = A[0].espacio;
     A[i].colision.P1.x = A[i-1].colision.P1.x+F1[i].espacio;
     A[i].colision.P2 = {A[i].colision.P1.x+esat::SpriteWidth(A[i].sprite.img), A[i].colision.P1.y + SpritesHeight};
@@ -636,64 +655,48 @@ void CambiarValoresNivel(){
 
     //Cambio valores de la velocidad y el espacio de los objetos que se muvene,  y las coliciones tambien
     //Los objetos que c mueven son los autos, Los troncos y las tortugas
-    ResetPosicionRandom(&F1[0].colision);
-    ResetPosicionRandom(&F2[0].colision);
-    ResetPosicionRandom(&F3[0].colision);
-    ResetPosicionRandom(&F4[0].colision);
-    ResetPosicionRandom(&F5[0].colision);
+    F1[0].colision = ResetPosicionRandom();
+    F2[0].colision = ResetPosicionRandom();
+    F3[0].colision = ResetPosicionRandom();
+    F4[0].colision = ResetPosicionRandom();
+    F5[0].colision = ResetPosicionRandom();
     
-    ResetPosicionRandom(&M1[0].colision);
-    ResetPosicionRandom(&M2[0].colision);
-    ResetPosicionRandom(&M3[0].colision);
+    M1[0].colision=ResetPosicionRandom();
+    M2[0].colision=ResetPosicionRandom();
+    M3[0].colision=ResetPosicionRandom();
 
-    ResetPosicionRandom(&T1[0].colision);
-    ResetPosicionRandom(&T1[0].colision);
+    T1[0].colision=ResetPosicionRandom();
+    T2[0].colision=ResetPosicionRandom();
 
-    ResetEspacio(&F1[0].espacio);
-    ResetEspacio(&F1[0].espacio);
-    ResetEspacio(&F1[0].espacio);
-    ResetEspacio(&F1[0].espacio);
+    F1[0].espacio=ResetEspacio();
+    F2[0].espacio=ResetEspacio();
+    F3[0].espacio=ResetEspacio();
+    F4[0].espacio=ResetEspacio();
 
-    ResetEspacio(&M1[0].espacio);
-    ResetEspacio(&M2[0].espacio);
-    ResetEspacio(&M3[0].espacio);
+    M1[0].espacio=ResetEspacio();
+    M2[0].espacio=ResetEspacio();
+    M3[0].espacio=ResetEspacio();
 
-    ResetEspacio(&T1[0].espacio);
-    ResetEspacio(&T2[0].espacio);
+    T1[0].espacio=ResetEspacio();
+    T2[0].espacio=ResetEspacio();
 
-    ResetAutos(F1);
-    ResetAutos(F2);
-    ResetAutos(F3);
-    ResetAutos(F4);
-    ResetAutos(F5);
+    ResetAutos(F1, vF1);
+    ResetAutos(F2, vF2);
+    ResetAutos(F3, vF3);
+    ResetAutos(F4, vF4);
+    ResetAutos(F5, 3);
 
-    // ResetFlotantes(M1);
-    // ResetFlotantes(M2);
-    // ResetFlotantes(M3);
+    // ResetFlotantes(M1, vM1);
+    // ResetFlotantes(M2,vM2);
+    // ResetFlotantes(M3, vM3);
 
-    // ResetFlotantes(T1);
-    // ResetFlotantes(T2);
+    // ResetFlotantes(T1, vT1);
+    // ResetFlotantes(T2, vT2);
 
     esp = (esat::SpriteWidth(F5[0].sprite.img)*2) + (rand() % (esat::SpriteWidth(F5[0].sprite.img)*2));
     for(int i = 0; i<5; i++){
-      F1[i].velocidad = vF1;
-      F2[i].velocidad = vF2;
-      F3[i].velocidad = vF3;
-      F4[i].velocidad = vF4;
-
-      //troncos
-      M1[i].velocidad = vM1;
-      M2[i].velocidad = vM2;
-      M3[i].velocidad = vM3;
-
-      //Tortugas
-      T1[i].velocidad = vT1;
-      T2[i].velocidad = vT2;
-
       F5[i].espacio = esp;
-      F5[i].velocidad = 3;
     }
-    //parece que el F5 no cambia de velocidad
     LastNivel++;
   }
 }
@@ -751,13 +754,13 @@ int esat::main(int argc, char **argv) {
   while(esat::WindowIsOpened() && !esat::IsSpecialKeyDown(esat::kSpecialKey_Escape)){
     last_time = esat::Time();
     esat::DrawBegin();
-    //CambiarValoresNivel();
+    CambiarValoresNivel();
 
     DibujarFondo(); //dibuja el background
 
     DetectarInput();
 
-    Dispaly(); //Dibuja todos los objetos que se mueven
+    Display(); //Dibuja todos los objetos que se mueven
 
     esat::DrawEnd();
     ControlFPS();
