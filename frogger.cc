@@ -86,12 +86,6 @@ struct Perro{
   int velocidad;
 };
 
-struct Mosca{
-  Colision colision;
-  esat::SpriteHandle sprite;
-  int Puntos;
-};
-
 struct RanaNPC{
   Colision colision;
   Sprite sprite;
