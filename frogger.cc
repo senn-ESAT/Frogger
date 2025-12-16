@@ -35,8 +35,8 @@ struct Frog{
   Sprite sprite;                // Sprite actual rana
   Direccion dir;                // Direccion rana
   PuntoCoord origen;            // Desde donde salta --> sirve para animacion del salto
-  int vidas = 3, score,         // Las vidas y la puntuacion de la run
-      arriba;                   // Para calcular puntos en base a distancia
+  int vidas = 3, score;         // Las vidas y la puntuacion de la run
+  float arriba;                 // Para calcular puntos en base a distancia
   bool jumping = false,         // Ppara animacion salto
        muriendo = false;        // es para que inicie animacion muerte y bloque los movimientos
 };
@@ -45,7 +45,8 @@ struct Frog{
 struct SafeZone{
   Colision colision;
   Sprite sprite;                //sprite de los eventos
-  int evento;                   //en plan 0 = agua, 1 = mosca, 2 = cocodrilo, 4 = rana/player
+  int evento = 0;               //en plan 0 = agua, 1 = mosca, 2 = cocodrilo, 4 = rana/player
+  float inicioEvento;
 };
 
 //-------------Objetos-------------
@@ -116,7 +117,8 @@ const int FontSize = 20, SpritesHeight = 48;  //La altuara de los sprites, sirve
 const int ScreenX = 672, ScreenY = 768;       //Screen size
 unsigned char fps=25;                         //Control de frames por AnimacionTortugas
 double  current_time, last_time,
-        TimeAnimacion, TimeMuerte;//gestion de tiempo
+        TimeAnimacion, TimeMuerte,            //gestion de tiempo para animacionse
+        LevelTime;                            //Timer del nivel (la barra verde)
 
 //Variables globales
 float Points[10] = {0,0,ScreenX,0,ScreenX,ScreenY/2,0,ScreenY/2,0,0}; //zona azul
@@ -137,12 +139,13 @@ esat::SpriteHandle
   Tortugas[5],
   Players[8],
   Muerte[7],
+  Campero[2],
 //UI
   SpriteLetras, SpriteNivel, SpriteVidas, SpriteTiempo,
 //Extras
   SpriteMeta, SpritePastoVerde, SpritePasto, SpriteMosca, SpriteCocodriloCampero,
 //Player 
-  SpriteFrog, SpriteMuerte,
+  SpriteFrog, SpriteMuerte, RanaSafe,
 //Flotantes
   SpriteTronco,
   SpriteTortuga,
@@ -172,6 +175,7 @@ void LoadSprites(){
   //Player
   SpriteFrog = esat::SpriteFromFile("./Assets/img/SheetRana.png");
   SpriteMuerte = esat::SpriteFromFile("./Assets/img/SheetMuerte.png");
+  RanaSafe = esat::SpriteFromFile("./Assets/img/RanaSafe.png");
   //Flotantes
   SpriteTronco = esat::SpriteFromFile("./Assets/img/SheetTronco.png");
   SpriteTortuga = esat::SpriteFromFile("./Assets/img/SheetTortuga.png");
@@ -187,8 +191,11 @@ void LoadSprites(){
   SpriteSerpiente = esat::SpriteFromFile("./Assets/img/SheetSerpiente.png");
 
   for(int i = 0; i < 8; i++){ //sprites madera son 3 y sprtes tortuga son 5
+    if(i<2){
+      Campero[i] = esat::SubSprite(SpriteCocodriloCampero,48*i,0,48,48);   //48*i es lo ancho de cada sprite
+    }
     if(i<3){
-      Madera[i] = esat::SubSprite(SpriteTronco,48*i,0,48,48);   //48*i es la posicion de cada sprite
+      Madera[i] = esat::SubSprite(SpriteTronco,48*i,0,48,48);
     }
     if(i < 5){
       Tortugas[i] = esat::SubSprite(SpriteTortuga,48*i,0,48,48);
@@ -197,7 +204,6 @@ void LoadSprites(){
       Muerte[i] = esat::SubSprite(SpriteMuerte, 48*i, 0, 48, 48);
     }
     Players[i] = esat::SubSprite(SpriteFrog, 48*i, 0, 48, 48);
-    //TO-DO rana npc, cocodrilo, eventos meta
   } 
 }
 
@@ -219,10 +225,12 @@ void InicializarJugadores(){
     Player2.colision.P2.x = Player2.colision.P1.x+48;
     Player2.colision.P2.y = Player2.colision.P1.y + SpritesHeight -3;
     Player2.origen = Player2.colision.P1;
+    Player2.arriba = Player2.colision.P1.y;
   }
   Player1.colision.P2.x = Player1.colision.P1.x+48;
   Player1.colision.P2.y = Player1.colision.P1.y + SpritesHeight -3;
   Player1.origen = Player1.colision.P1;
+  Player1.arriba = Player1.colision.P1.y;
 }
 
 void InicializarAutos(){
@@ -298,7 +306,7 @@ int ResetEspacio(){
 
 int ResetVelocidad(){
   int newSpeed;
-  newSpeed = Nivel + 3 + rand()%5; //minimo 3 maximo 8 (5+3=8) + 1 por cada nivel
+  newSpeed = (Nivel/3) + 3 + rand()%5; //minimo 3 maximo 8 (3+4=8) + 1/3 por cada nivel
   return newSpeed;  
 }
 
@@ -322,7 +330,7 @@ void ResetAutos(Autos *A){
     A[i].colision.P2.x = A[i].colision.P1.x + esat::SpriteWidth(A[i].sprite.img);
   }
 }
-//TO-DO Troncos y tortugas pueden muy facilmente usar la misma funcion
+
 void ResetTroncos(Tronco *M){
   M[0].espacio = (48*M[0].no)+48+(rand()%(48*3));     //un tronco puede ser ancho 6 sprites entonces de 4 a 1 sprite mas ancho del tronco
   M[0].colision = ResetPosicionRandom(M[0].colision);
@@ -383,11 +391,32 @@ void CambiarValoresNivel(){
     ResetTroncos(M1);
     ResetTroncos(M2);
     ResetTroncos(M3);
+
     ResetTortugas(T1);
     ResetTortugas(T2);
+    
+    int Anchura = esat::SpriteWidth(SpriteMeta) + (esat::SpriteWidth(SpritePastoVerde)*2);
 
-    ResetPlayer(&Player1);
-    Nivel = 0;
+    for(int i = 0; i < 5; i++){
+      fin[i].evento = 0;
+      if(fin[4].colision.P1.x == 0){
+        fin[i].colision.P1.x = (Anchura*i) + 24;
+        fin[i].colision.P1.y = 96;
+        fin[i].colision.P2.x = fin[i].colision.P1.x + 48;
+        fin[i].colision.P2.y = 144;
+      }
+    }
+}
+
+void RespawnPlayer(){
+  Player1.colision.P1.x = (ScreenX/2)-24;
+  Player1.colision.P1.y = (ScreenY-(SpritesHeight*2))+1;
+  Player1.sprite.img = Players[1];
+  Player1.colision.P2.x = Player1.colision.P1.x+48;
+  Player1.colision.P2.y = Player1.colision.P1.y + SpritesHeight - 3;
+  Player1.origen = Player1.colision.P1;
+  Player1.dir=UP;
+  Player1.arriba = Player1.colision.P1.y;
 }
 
 /*******************************************************
@@ -401,22 +430,42 @@ bool DetectarColision(Colision a, Colision b) {
          (a.P1.y <= b.P2.y);
 }
 
-void Death(bool *mu, int *hp){
+void Death(bool *mu, int *hp, float *A, float y){
   *mu = true;
   *hp -= 1;
+  *A = y;
   TimeMuerte = esat::Time();
 }
 
-void ColisionPlayerMeta(frog P){
+void ColisionPlayerMeta(Frog *P){
   for(int i = 0; i < 5; i++){
-    if(DetectarColision(P->colision, fin[i].colision) && fin[i].){
-
+    if(DetectarColision(P->colision, fin[i].colision)){ //si colision player-meta entra
+      //en plan 0 = agua, 1 = mosca, 2 = cocodrilo, 3 = rana/player
+      switch(fin[i].evento){  //si esta vacio
+        case 0:
+          P->score += 200;
+          RespawnPlayer();
+          fin[i].evento = 3;
+        break;
+        case 1: //si mosca
+          P->score += 400;
+          RespawnPlayer();
+          fin[i].evento = 3;
+        break;
+        case 2: // si cocodrilomuerto
+          Death(&P->muriendo, &P->vidas, &P->arriba, P->colision.P1.y);
+        break;
+        case 3: //si esta ocupado rana retrocede
+          P->colision.P1.y += 48;
+          P->colision.P2.y += 48;
+          P->origen = P->colision.P1;
+        break;
+      }
     }
-
   }
 }
 
-//TO-DO animacion y teletrasporte post muerte
+
 void ColisionPlayerAuto(Frog *P){
   for(int i = 0; i < 5; i++){   
     if(P->muriendo == false){
@@ -425,7 +474,7 @@ void ColisionPlayerAuto(Frog *P){
           DetectarColision(P->colision, F3[i].colision) ||
           DetectarColision(P->colision, F4[i].colision) ||
           DetectarColision(P->colision, F5[i].colision) ){
-        Death(&P->muriendo, &P->vidas);
+        Death(&P->muriendo, &P->vidas, &P->arriba, P->colision.P1.y);
         break;
       }
     }
@@ -448,7 +497,7 @@ void MoverPlayer(Colision *coli, PuntoCoord *orig, int vel, Direccion dir){
 void ColisionesPlayerFlotantes(Frog *P){
   int velocidad;
   if(P->muriendo == false){   //si ya esta muriendo entonces no entra
-    if(P->colision.P1.y < (ScreenY/2)){   //si esta en el rio
+    if(P->colision.P1.y < (ScreenY/2) && P->colision.P1.y > (ScreenY-(SpritesHeight*14))+1){   //si esta en el rio
       bool flotando = false;
     
       for(int i = 0; i < 5; i++){//si hay colision almenos 1 de los que flotan y 
@@ -481,30 +530,37 @@ void ColisionesPlayerFlotantes(Frog *P){
 
       //si no flota muere
       if(flotando == false){
-        Death(&P->muriendo, &P->vidas);
+        Death(&P->muriendo, &P->vidas, &P->arriba, P->colision.P1.y);
       }
     }
   }
 }
 
 void ColisionBordes(Frog *P){
-  if(P->colision.P2.x < 0){
-    Death(&P->muriendo, &P->vidas);
-  }
-  if(P->colision.P1.x > ScreenX){
-    Death(&P->muriendo, &P->vidas);
-  }
-    if(P->colision.P1.y > (ScreenY-(SpritesHeight*2))+1){
-      P->colision.P1.y -= 48;
-      P->colision.P2.y -= 48; 
-      P->origen.y = P->colision.P1.y;
+  if(P->muriendo == false){
+    if(P->colision.P2.x < 0){
+      Death(&P->muriendo, &P->vidas, &P->arriba, P->colision.P1.y);
     }
+    if(P->colision.P1.x > ScreenX){
+      Death(&P->muriendo, &P->vidas, &P->arriba, P->colision.P1.y);
+    }
+  }
+  if(P->colision.P1.y > (ScreenY-(SpritesHeight*2))+1){
+    P->colision.P1.y -= 48;
+    P->colision.P2.y -= 48;
+    P->origen = P->colision.P1;
+  }
+  if(P->colision.P1.y < (ScreenY-(SpritesHeight*13))+1){
+    P->colision.P1.y += 48;
+    P->colision.P2.y += 48;
+    P->origen = P->colision.P1;
+  }
 }
 
 void DetectarColisionesPlayers(){
   //calculo colisiones jugadores
   if(InGame){
-    ColisionPlayerMeta($player1);
+    ColisionPlayerMeta(&Player1);
     ColisionPlayerAuto(&Player1);
     ColisionesPlayerFlotantes(&Player1);
     ColisionBordes(&Player1);
@@ -526,10 +582,9 @@ void DibujarRectanguloColision(Colision colision, unsigned char r = 255, unsigne
 }
 
 void CalculoPuntos(Frog *Player){
-  if(Player->arriba < (int)Player->colision.P1.y){
+  if(Player->arriba > Player->colision.P1.y){
     Player->score += 10;
-    // TO-DO no funsica
-    Player->arriba = (int)Player->colision.P1.y;
+    Player->arriba = Player->colision.P1.y;
   }
 }
 
@@ -578,43 +633,6 @@ void InputsInGame(){
       Player1.jumping = true;
     }
   }
-  //TO-DO No funciona, controlar
-  if(numPlayers == 2 && Player2.jumping == false){
-    //lo mismo que player 1 pero se mueve en base a wasd
-    if(esat::IsKeyDown(119)){
-      Player2.origen.y = Player2.colision.P1.y;
-
-      Player2.colision.P1.y -= 48;
-      Player2.colision.P2.y -= 48;
-      Player2.dir = UP;
-      CalculoPuntos(&Player2);
-      Player2.jumping = true;
-    }
-    if(esat::IsKeyDown(115)){
-      Player2.origen.y = Player2.colision.P1.y;
-
-      Player2.colision.P1.y += 48;
-      Player2.colision.P2.y += 48;
-      Player2.dir = DOWN;
-      Player2.jumping = true;
-    }
-    if(esat::IsKeyDown(100)){
-      Player2.origen.x = Player2.colision.P1.x;
-
-      Player2.colision.P1.x += 48;
-      Player2.colision.P2.x += 48;
-      Player2.dir = RIGHT;
-      Player2.jumping = true;
-    }
-    if(esat::IsKeyDown(97)){
-      Player2.origen.x = Player2.colision.P1.x;
-
-      Player2.colision.P1.x -= 48;
-      Player2.colision.P2.x -= 48;
-      Player2.dir = LEFT;
-      Player2.jumping = true;
-    }
-  }
 }
 
 void InputsInMenu(){
@@ -654,7 +672,6 @@ void DrawFrogger(){
 }
 
 void DubujarMenu(){
-  //TO-DO animacion inicial de la ranas que FROGGER
   switch(TipoMenu){
     case 0:
       DrawFrogger();
@@ -706,7 +723,27 @@ void DubujarMenu(){
       esat::DrawText((ScreenX/2)-200, SpritesHeight*11, "3 RD         PTS");
       esat::DrawText((ScreenX/2)-200, SpritesHeight*12, "4 TH         PTS");
       esat::DrawText((ScreenX/2)-200, SpritesHeight*13, "5 TH         PTS");
-      //TO-DO puntos de ScoreList
+
+      char  ScoreHistory1[5] = {0}, 
+            ScoreHistory2[5] = {0}, 
+            ScoreHistory3[5] = {0}, 
+            ScoreHistory4[5] = {0}, 
+            ScoreHistory5[5] = {0};
+
+      //itoa de int a char
+      itoa(ScoreList[0] +100000, ScoreHistory1, 10);
+      itoa(ScoreList[1] +100000, ScoreHistory2, 10);
+      itoa(ScoreList[2] +100000, ScoreHistory3, 10);
+      itoa(ScoreList[3] +100000, ScoreHistory4, 10);
+      itoa(ScoreList[4] +100000, ScoreHistory5, 10);
+
+      esat::DrawText((ScreenX/2)-80, SpritesHeight*9,  ScoreHistory1 + 1);
+      esat::DrawText((ScreenX/2)-80, SpritesHeight*10, ScoreHistory2 + 1);
+      esat::DrawText((ScreenX/2)-80, SpritesHeight*11, ScoreHistory3 + 1);
+      esat::DrawText((ScreenX/2)-80, SpritesHeight*12, ScoreHistory4 + 1);
+      esat::DrawText((ScreenX/2)-80, SpritesHeight*13, ScoreHistory5 + 1);
+
+
       esat::DrawText((ScreenX/2)-180, SpritesHeight*15, "KONAMI  a  1981");
     break;
   }
@@ -730,14 +767,7 @@ void AnimacionMuerte(Frog *P){
   }
   esat::DrawSprite(Muerte[indiceMuerte], P->colision.P1.x, P->colision.P1.y);
   if(TimerFrames > 2100){
-    P->colision.P1.x = (ScreenX/2)-24;
-    P->colision.P1.y = (ScreenY-(SpritesHeight*2))+1;
-    P->sprite.img = Players[1];
-    P->colision.P2.x = Player1.colision.P1.x+48;
-    P->colision.P2.y = Player1.colision.P1.y + SpritesHeight - 3;
-    P->origen = Player1.colision.P1;
-    P->dir=UP;
-
+    RespawnPlayer();
     P->muriendo = false;
   }
 }
@@ -812,15 +842,23 @@ void DibujarMeta(float X){
 void DibujarPiso(){
   //pasto arriba
   int Anchura = esat::SpriteWidth(SpriteMeta) + (esat::SpriteWidth(SpritePastoVerde)*2);
+  int ranasEnMeta = 0;
+
   for(int i = 0; i<5; i++){
-    if(fin[4].colision.P1.x == 0){
-      fin[i].colision.P1.x = (Anchura*i) + 24;
-      fin[i].colision.P1.y = 96;
-      fin[i].colision.P2.x = fin[i].P1.x + 48;
-      fin[i].colision.P2.y = 144;
-    }
-    DibujarRectanguloColision(fin[i].colision, 0, 255, 255);
     DibujarMeta(Anchura*i);
+    DibujarRectanguloColision(fin[i].colision, 0, 255, 255);
+    
+    if(fin[i].inicioEvento + 3000 < esat::Time() && fin[i].evento == 2){  //si pasaron 3 segundos y el evento es cocodrilo
+      fin[i].evento = 0;  //vuelve a vacio
+    }
+    if(fin[i].evento == 3){
+      esat::DrawSprite(RanaSafe, fin[i].colision.P1.x, fin[i].colision.P1.y);
+      ranasEnMeta += 1;
+      if(ranasEnMeta == 5){
+        Nivel++;
+        CambiarValoresNivel();
+      }
+    }
   }
 
   //pasto violeta
@@ -1042,7 +1080,6 @@ void DibujarFlotantes(){
       if(j<2){
         AnimacionTortuga(&T2[i], j);
       }
-      //To-DO para tortuga T1 pero antes tiene que funcionar T2
       AnimacionTortuga(&T1[i], j);
     }
 
@@ -1068,6 +1105,9 @@ void CalculoScorePlayer(int PTS){
     }
     else{
       ScoreList[i+1] = ScoreList[i];
+      if(ScoreList[i] == ScoreList[i-1] || ScoreList[i] == ScoreList[i-2] || ScoreList[i] == ScoreList[i-3]){
+        ScoreList[i] = 0;
+      }
       if(i == NewScore){
         ScoreList[NewScore] = PTS;
       }
@@ -1091,6 +1131,12 @@ void GameOver(){
       InGame = false;
       TipoMenu = 2;
       GuardarScore();
+      ResetPlayer(&Player1);
+      Nivel = 0;
+      UltimaT1 = 4;
+      UltimaT2 = 4;
+      PrimeraT1 = 0;
+      PrimeraT2 = 0;
     }
   }
 }
@@ -1126,7 +1172,6 @@ void DibujarCabecera(){
 }
 
 void DibujarPantalla(){
-  //TO-DO if in game (juego) o menu (animacion)
   if(InGame){
     DibujarJuego();
   }
@@ -1150,8 +1195,17 @@ void DibujarVidas(){
 
 void DibujarNivel(){
   for(int i = 0; i < Nivel; i++){
-    esat::DrawSprite(SpriteNivel, (ScreenX - (i*(-24))), (ScreenY-24)+esat::SpriteHeight(SpriteNivel));
+    esat::DrawSprite(SpriteNivel, (ScreenX - 48) - (i*esat::SpriteWidth(SpriteNivel)), ScreenY-48);
   }
+}
+
+void TibujarTime(){
+  //LevelTime
+
+  // int SecondBlock = 400/LevelTime;
+
+  // esat::DrawSetFillColor(0,255,0);
+  // timeLines[10] = {()- ScreenY-18}
 }
 
 void DibujarCreditos(){
@@ -1169,7 +1223,7 @@ void DibujarPie(){
   if(InGame){
     DibujarVidas();
     DibujarNivel();
-    //TO-DO TibujarTime();
+    TibujarTime();
   }
   else{
     DibujarCreditos();
