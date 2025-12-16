@@ -113,12 +113,12 @@ Tortuga T1[5], T2[5];                         //Un array por cada fila de column
 //Porque 5? Porque me parece que nunca aparecen mas de 5 objetos a la vez por fila
 
 //Variables de sistema y costantes
-const int FontSize = 20, SpritesHeight = 48;  //La altuara de los sprites, sirve para calcular la cantidad de filas
-const int ScreenX = 672, ScreenY = 768;       //Screen size
-unsigned char fps=25;                         //Control de frames por AnimacionTortugas
-double  current_time, last_time,
-        TimeAnimacion, TimeMuerte,            //gestion de tiempo para animacionse
-        LevelTime;                            //Timer del nivel (la barra verde)
+const int FontSize = 20, SpritesHeight = 48;  // La altuara de los sprites, sirve para calcular la cantidad de filas
+const int ScreenX = 672, ScreenY = 768;       // Screen size
+unsigned char fps=25;                         // Control de frames por AnimacionTortugas
+double  current_time, last_time,              // Esto sirve para 
+        TimeAnimacion, TimeMuerte,            // Gestion de tiempo para animacionse
+        LevelTime;                            // Timer del nivel (la barra verde)
 
 //Variables globales
 float Points[10] = {0,0,ScreenX,0,ScreenX,ScreenY/2,0,ScreenY/2,0,0}; //zona azul
@@ -1091,28 +1091,18 @@ void DibujarFlotantes(){
   }
 }
 
-void CalculoScorePlayer(int PTS){
-  int NewScore = 0;
-  bool cambio = false;
-
-  //un while seria mejor
-  for(int i = 0; i < 5; i++){
-    if(cambio = false){
-      if(PTS > ScoreList[i]){
-        int NewScore = i;
-        cambio = true;
-      }
+void CalculoScorePlayer(int PTS) {
+    for (int i = 0; i < 5; i++) {
+        if (PTS > ScoreList[i]) {
+            // reduce la posicion de 1 por cada inferior
+            for (int j = 4; j > i; j--) {
+                ScoreList[j] = ScoreList[j - 1];
+            }
+            // Mete un nuevo 
+            ScoreList[i] = PTS;
+            break;
+        }
     }
-    else{
-      ScoreList[i+1] = ScoreList[i];
-      if(ScoreList[i] == ScoreList[i-1] || ScoreList[i] == ScoreList[i-2] || ScoreList[i] == ScoreList[i-3]){
-        ScoreList[i] = 0;
-      }
-      if(i == NewScore){
-        ScoreList[NewScore] = PTS;
-      }
-    }
-  }
 }
 
 //esto c llama al game over
@@ -1200,12 +1190,7 @@ void DibujarNivel(){
 }
 
 void TibujarTime(){
-  //LevelTime
-
-  // int SecondBlock = 400/LevelTime;
-
-  // esat::DrawSetFillColor(0,255,0);
-  // timeLines[10] = {()- ScreenY-18}
+  //TO-DO 
 }
 
 void DibujarCreditos(){
