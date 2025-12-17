@@ -71,48 +71,21 @@ struct Tortuga{
         espacio,                // Espacion entre grupos de tortugas
         frame = 0,              // Frame de la animacion 0-2 nadando,
         frameSub = 2;           // 3-4 undiendose 5 abajo del agua
-  double espera,                //todos estos doubles son para la animacion del undimiento
-        hundimientoInicio,      //espera es cada cuanto se unden, en que segundo einicio el hundimiento
+  double espera,                // todos estos doubles son para la animacion del undimiento
+        hundimientoInicio,      // espera es cada cuanto se unden, en que segundo einicio el hundimiento
         AnimacionSub;           // sirve para calcular el frameSub
   bool  hunde = false,          // No todas se unden, esto sirve para decir si una tortuga se hunde 
         flota = true;           // Para ver si se puede saltar arriba de las tortugas o no
 };
 
-struct Cocodlio{
-  Colision body;                //tiene dos colisiones protque n el cuerpo es seguro y en la cabza moris
-  Colision head;
-  Sprite sprite;
-  int velocidad;
-};
+Frog Player1, Player2;                        // Jugadores
+SafeZone fin[5];                              // Casas
+Autos F1[5], F2[5], F3[5], F4[5], F5[5];      // Un array por cada fila de autos
+Tronco M1[5], M2[5], M3[5];                   // Un array por cada fila de troncos(M de madera porque T va a las tortugas)
+Tortuga T1[5], T2[5];                         // Un array por cada fila de columnas
+// 5 Porque me parece que nunca aparecen mas de 5 objetos a la vez por fila
 
-//-------------NPC-------------
-struct Serpiente{
-  Colision colision;
-  Direccion direccion;
-  int velocidad = 1;
-};
-
-struct Perro{
-  Colision colision;
-  Sprite sprite;
-  Direccion direccion;
-  int velocidad;
-};
-
-struct RanaNPC{
-  Colision colision;
-  Sprite sprite;
-  int dir;
-};
-
-Frog Player1, Player2;                        //Jugadores
-SafeZone fin[5];                              //Casas
-Autos F1[5], F2[5], F3[5], F4[5], F5[5];      //Un array por cada fila de autos
-Tronco M1[5], M2[5], M3[5];                   //Un array por cada fila de troncos(M de madera porque T va a las tortugas)
-Tortuga T1[5], T2[5];                         //Un array por cada fila de columnas
-//Porque 5? Porque me parece que nunca aparecen mas de 5 objetos a la vez por fila
-
-//Variables de sistema y costantes
+// Variables de sistema y costantes
 const int FontSize = 20, SpritesHeight = 48;  // La altuara de los sprites, sirve para calcular la cantidad de filas
 const int ScreenX = 672, ScreenY = 768;       // Screen size
 unsigned char fps=25;                         // Control de frames por AnimacionTortugas
@@ -121,17 +94,15 @@ double  current_time, last_time,              // Esto sirve para
         LevelTime;                            // Timer del nivel (la barra verde)
 
 //Variables globales
-float Points[10] = {0,0,ScreenX,0,ScreenX,ScreenY/2,0,ScreenY/2,0,0}; //zona azul
 bool InGame = false;    // Si false es menu, si true es el juego
 int TipoMenu = 0,       // 3 pantallas 
-    numPlayers = 1,     // Numero de jugadores
     highScore = 0,      // El high score
     Nivel = 0,          // Nivel actual
     Creditos = 0,       // Los Creditos/coins
-        TotalSeconds = 0,   // La cantidad de segundos totales
-    SecondWidth,        // La cantidad de px que ocupa un segundo en proporcion al maximo de tiempo por nivel
+    TotalSeconds = 0,   // La cantidad de segundos totales
     SecondPassed,       // Cantidad de segundos que pasaron desde el inicio del nivel
     ScoreList[5] = {0}; // Los top 5 high scores, inicializados a 0 para que c llenen
+
 // Las tortugas las tengo que hacer retroceder en modo diferente
 int UltimaT1 = 4, UltimaT2 = 4,
     PrimeraT1 = 0, PrimeraT2 = 0; 
@@ -144,37 +115,28 @@ esat::SpriteHandle
   Muerte[7],
   Campero[2],
 //UI
-  SpriteLetras, SpriteNivel, SpriteVidas, SpriteTiempo,
+  SpriteNivel, SpriteVidas,
 //Extras
-  SpriteMeta, SpritePastoVerde, SpritePasto, SpriteMosca, SpriteCocodriloCampero,
+  SpriteMeta, SpritePastoVerde, SpritePasto,
 //Player 
-  SpriteFrog, SpriteMuerte, RanaSafe,
-//Flotantes
-  SpriteTronco,
-  SpriteTortuga,
-  SpriteCocodlio,
+  RanaSafe,
 //Veiculos
   SpriteCamion,
   SpriteAuto1,
   SpriteAuto2,
   SpriteAuto3,
-  SpriteAuto4,
-//Enemigos
-  SpritePerro,
-  SpriteSerpiente;
+  SpriteAuto4;
 
 void LoadSprites(){
+  esat::SpriteHandle SpriteTronco, SpriteTortuga, SpriteMuerte, SpriteFrog;
+
   //UI
-  SpriteLetras = esat::SpriteFromFile("./Assets/img/SheetLetras.png");
   SpriteNivel = esat::SpriteFromFile("./Assets/img/Nivel.png");
   SpriteVidas = esat::SpriteFromFile("./Assets/img/Vidas.png");
-  SpriteTiempo = esat::SpriteFromFile("./Assets/img/SheetTime.png");
   //Extras
   SpriteMeta = esat::SpriteFromFile("./Assets/img/lagunito.png");
   SpritePastoVerde = esat::SpriteFromFile("./Assets/img/piso.png");
   SpritePasto = esat::SpriteFromFile("./Assets/img/Pasto.png");
-  SpriteMosca = esat::SpriteFromFile("./Assets/img/Mosca.png");
-  SpriteCocodriloCampero = esat::SpriteFromFile("./Assets/img/SheetCampero.png");
   //Player
   SpriteFrog = esat::SpriteFromFile("./Assets/img/SheetRana.png");
   SpriteMuerte = esat::SpriteFromFile("./Assets/img/SheetMuerte.png");
@@ -182,21 +144,15 @@ void LoadSprites(){
   //Flotantes
   SpriteTronco = esat::SpriteFromFile("./Assets/img/SheetTronco.png");
   SpriteTortuga = esat::SpriteFromFile("./Assets/img/SheetTortuga.png");
-  SpriteCocodlio = esat::SpriteFromFile("./Assets/img/SheetCocodrilo.png");
   //Veiculos
   SpriteCamion = esat::SpriteFromFile("./Assets/img/Camion.png");
   SpriteAuto1 = esat::SpriteFromFile("./Assets/img/Auro1.png");
   SpriteAuto2 = esat::SpriteFromFile("./Assets/img/Auto2.png");
   SpriteAuto3 = esat::SpriteFromFile("./Assets/img/Auto3.png");
   SpriteAuto4 = esat::SpriteFromFile("./Assets/img/Auto4.png");
-  //Enemigos
-  SpritePerro = esat::SpriteFromFile("./Assets/img/SheetPerro.png");
-  SpriteSerpiente = esat::SpriteFromFile("./Assets/img/SheetSerpiente.png");
 
-  for(int i = 0; i < 8; i++){ //sprites madera son 3 y sprtes tortuga son 5
-    if(i<2){
-      Campero[i] = esat::SubSprite(SpriteCocodriloCampero,48*i,0,48,48);   //48*i es lo ancho de cada sprite
-    }
+  // Distribucion de Sprite Sheets
+  for(int i = 0; i < 8; i++){
     if(i<3){
       Madera[i] = esat::SubSprite(SpriteTronco,48*i,0,48,48);
     }
@@ -219,17 +175,6 @@ void InicializarJugadores(){
   Player1.colision.P1.x = (ScreenX/2)-24;
   Player1.colision.P1.y = (ScreenY-(SpritesHeight*2))+1;
   Player1.sprite.img = Players[1];
-
-  //Mismo spawn para ambs jugadores
-  if(numPlayers == 2){
-    Player2 = Player1;
-    Player1.colision.P1.x /= 2;
-    Player2.colision.P1.x = Player1.colision.P1.x*3;
-    Player2.colision.P2.x = Player2.colision.P1.x+48;
-    Player2.colision.P2.y = Player2.colision.P1.y + SpritesHeight -3;
-    Player2.origen = Player2.colision.P1;
-    Player2.arriba = Player2.colision.P1.y;
-  }
   Player1.colision.P2.x = Player1.colision.P1.x+48;
   Player1.colision.P2.y = Player1.colision.P1.y + SpritesHeight -3;
   Player1.origen = Player1.colision.P1;
@@ -385,7 +330,6 @@ void ResetPlayer(Frog *P){
 void ResetTime(){
   TotalSeconds = 25 + rand()%15;  //de 25 a 40 segundos x nivel
   LevelTime = esat::Time();
-  SecondWidth = 400/TotalSeconds;
   SecondPassed = 0; 
 }
 
@@ -580,11 +524,6 @@ void DetectarColisionesPlayers(){
     ColisionPlayerAuto(&Player1);
     ColisionesPlayerFlotantes(&Player1);
     ColisionBordes(&Player1);
-  
-    if(numPlayers > 1){
-      ColisionPlayerAuto(&Player2);
-      ColisionesPlayerFlotantes(&Player2);
-    }
   }
 }
 
@@ -656,10 +595,6 @@ void InputsInMenu(){
     TipoMenu--;
   if(TipoMenu < 2 && esat::IsSpecialKeyDown(esat::kSpecialKey_Right))
     TipoMenu++;
-  if(TipoMenu == 1 && esat::IsSpecialKeyDown(esat::kSpecialKey_Up))
-    numPlayers = 1;
-  if(TipoMenu == 1 && esat::IsSpecialKeyDown(esat::kSpecialKey_Down))
-    numPlayers = 2;
   if(Creditos < 99 && esat::IsSpecialKeyDown(esat::kSpecialKey_Keypad_1))
     Creditos++;
   if(TipoMenu == 1 && Creditos > 0 && esat::IsSpecialKeyDown(esat::kSpecialKey_Enter)){
@@ -683,14 +618,9 @@ void DetectarInput(){
 **********************************************DIJUBOS MENU**************************************************
 ***********************************************************************************************************/
 
-void DrawFrogger(){
-  //TO-DO y tambien cambiar el sprite
-}
-
 void DubujarMenu(){
   switch(TipoMenu){
     case 0:
-      DrawFrogger();
 
       esat::DrawSetFillColor(255,255,255);
       esat::DrawText((ScreenX/2)-120, SpritesHeight*6, "-POINT TABLE-");
@@ -712,14 +642,6 @@ void DubujarMenu(){
       esat::DrawSetFillColor(255,255,255);
       esat::DrawText((ScreenX/2)-50, SpritesHeight*5, "PUSH");
       esat::DrawText((ScreenX/2)-100, SpritesHeight*9, "ONE PLAYER");
-      esat::DrawText((ScreenX/2)-110, (SpritesHeight*10)+20, "TWO PLAYERS");
-      if(numPlayers == 1){
-        PlayerSelection = SpritesHeight*9;
-      }
-      else{
-        PlayerSelection = (SpritesHeight*10)+20;
-      }
-      esat::DrawText((ScreenX/2)-150, PlayerSelection, "->");
 
       esat::DrawSetFillColor(255,192,203);
       esat::DrawText((ScreenX/2)-120, (SpritesHeight*7), "START BUTTON");
@@ -728,7 +650,6 @@ void DubujarMenu(){
       esat::DrawText((ScreenX/2)-260, SpritesHeight*12, "ONE EXTRA FROGG 20000 PTS");
     break;
     case 2:
-      DrawFrogger();
       esat::DrawSetFillColor(255,255,0);
       esat::DrawText((ScreenX/2)-160, SpritesHeight*7, "SCORE RANKING");
 
@@ -845,9 +766,6 @@ void DibujarJugador(){
   else{
     esat::DrawSprite(Player1.sprite.img, Player1.colision.P1.x, Player1.colision.P1.y);
   }
-  if(numPlayers > 1)
-    esat::DrawSprite(Player2.sprite.img, Player2.colision.P1.x, Player2.colision.P1.y);
-    DibujarRectanguloColision(Player2.colision, 0, 255, 255);
 }
 
 void DibujarMeta(float X){
@@ -1125,8 +1043,6 @@ void CalculoScorePlayer(int PTS) {
 //esto c llama al game over
 void GuardarScore() {
   CalculoScorePlayer(Player1.score);
-  if(numPlayers>1)
-    CalculoScorePlayer(Player2.score);
 }
 
 void GameOver(){
@@ -1159,23 +1075,19 @@ void DibujarJuego(){
 
   // UI
 void DibujarCabecera(){
-  char ScoreP1[5] = {0}, ScoreP2[5] = {0}, highScoreChars[5] = {0};
+  char ScoreP1[5] = {0}, highScoreChars[5] = {0};
   //itoa de int a char
   itoa(Player1.score +100000, ScoreP1, 10);
-  itoa(Player2.score +100000, ScoreP2, 10);
   itoa(ScoreList[0] +100000, highScoreChars, 10);
 
   esat::DrawSetFillColor(255,255,255);
   
   esat::DrawText((ScreenX/2)-230, 23, "1-UP   HI-SCORE");
-  if(numPlayers > 1)
-    esat::DrawText((ScreenX/2)+140, 25, "2-UP");
+
   
   esat::DrawSetFillColor(255,0,0);
   esat::DrawText((ScreenX/2)-250, 43, ScoreP1+1);
   esat::DrawText((ScreenX/2)-60, 43, highScoreChars+1);
-  if(numPlayers > 1)
-  esat::DrawText((ScreenX/2)+140, 43, ScoreP2+1);
 }
 
 void DibujarPantalla(){
@@ -1193,11 +1105,6 @@ void DibujarVidas(){
   for(int i = 0; i < Player1.vidas; i++){
     esat::DrawSprite(SpriteVidas, i*esat::SpriteWidth(SpriteVidas), ScreenY-48);
   }
-  if(numPlayers > 1){
-    for(int i = 0; i < Player2.vidas; i++){
-      esat::DrawSprite(SpriteVidas, i*esat::SpriteWidth(SpriteVidas), (ScreenY-24)+esat::SpriteHeight(SpriteVidas));
-    }
-  }
 }
 
 void DibujarNivel(){
@@ -1208,6 +1115,7 @@ void DibujarNivel(){
 
 void TibujarTime(){
   // LevelTime es los segundos
+  int SecondWidth = 400/TotalSeconds;
   if(Player1.muriendo == false){
     if((LevelTime + (1000*SecondPassed) + 1000) < esat::Time()){
       SecondPassed += 1;
@@ -1258,6 +1166,7 @@ void DibujarPie(){
 }
 
 void Display(){
+  // La pantalla esta dividida en 3 partes
   DibujarCabecera();
   DibujarPantalla();
   DibujarPie();
@@ -1267,13 +1176,14 @@ void Display(){
 **********************************************SISTEMA**********************************************************
 **************************************************************************************************************/
 
+// Dibuja el rio
 void DibujarFondo(){
+  float Points[10] = {0,0,ScreenX,0,ScreenX,ScreenY/2,0,ScreenY/2,0,0}; //zona azul
+
   esat::DrawClear(0,0,0);
   esat::DrawSetFillColor(0,4,74);
   esat::DrawSolidPath(Points,5);
 }
-
-
 
 void ControlFPS(){
   do{
@@ -1282,30 +1192,16 @@ void ControlFPS(){
 }
 
 void ReleaseOfSprites(){
-  esat::SpriteRelease(SpriteLetras);
   esat::SpriteRelease(SpriteNivel);
   esat::SpriteRelease(SpriteVidas);
-  esat::SpriteRelease(SpriteTiempo);
   esat::SpriteRelease(SpriteMeta);
   esat::SpriteRelease(SpritePastoVerde);
   esat::SpriteRelease(SpritePasto);
-  esat::SpriteRelease(SpriteMosca);
-  esat::SpriteRelease(SpriteCocodriloCampero);
-  esat::SpriteRelease(SpriteCocodlio);
   esat::SpriteRelease(SpriteCamion);
   esat::SpriteRelease(SpriteAuto1);
   esat::SpriteRelease(SpriteAuto2);
   esat::SpriteRelease(SpriteAuto3);
   esat::SpriteRelease(SpriteAuto4);
-  esat::SpriteRelease(SpritePerro);
-  esat::SpriteRelease(SpriteSerpiente);
-}
-
-void ReleaseSpriteSheets(){
-  esat::SpriteRelease(SpriteFrog);
-  esat::SpriteRelease(SpriteMuerte);
-  esat::SpriteRelease(SpriteTronco);
-  esat::SpriteRelease(SpriteTortuga);
 }
 
 int esat::main(int argc, char **argv) {
@@ -1314,25 +1210,24 @@ int esat::main(int argc, char **argv) {
   WindowSetMouseVisibility(true);
 
   LoadSprites();
-  ReleaseSpriteSheets();
   InicializarAutos();
   InicializarFlotantes();
-  //fuente
+
+  // Cargo la fuente
   esat::DrawSetTextFont("./Assets/font/arcade-legacy.ttf");
   esat::DrawSetTextSize(FontSize);
-  
 
   while(esat::WindowIsOpened() && !esat::IsSpecialKeyDown(esat::kSpecialKey_Escape)){
     last_time = esat::Time();
     esat::DrawBegin();
     
-    DibujarFondo();       //dibuja el background
+    DibujarFondo();               // Dibuja el background
     
-    DetectarInput();
+    DetectarInput();              // Detecta todos los imputs de teclado
     
-    Display();            //Dibuja todos los objetos que se mueven
+    Display();                    // Dibuja todos los objetos que se mueven
     
-    DetectarColisionesPlayers();
+    DetectarColisionesPlayers();  // Detecta las colisiones del jugador con el entorno
 
     esat::DrawEnd();
     ControlFPS();
