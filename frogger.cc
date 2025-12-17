@@ -128,6 +128,9 @@ int TipoMenu = 0,       // 3 pantallas
     highScore = 0,      // El high score
     Nivel = 0,          // Nivel actual
     Creditos = 0,       // Los Creditos/coins
+        TotalSeconds = 0,   // La cantidad de segundos totales
+    SecondWidth,        // La cantidad de px que ocupa un segundo en proporcion al maximo de tiempo por nivel
+    SecondPassed,       // Cantidad de segundos que pasaron desde el inicio del nivel
     ScoreList[5] = {0}; // Los top 5 high scores, inicializados a 0 para que c llenen
 // Las tortugas las tengo que hacer retroceder en modo diferente
 int UltimaT1 = 4, UltimaT2 = 4,
@@ -379,6 +382,13 @@ void ResetPlayer(Frog *P){
   P->arriba = 0;
 }
 
+void ResetTime(){
+  TotalSeconds = 25 + rand()%15;  //de 25 a 40 segundos x nivel
+  LevelTime = esat::Time();
+  SecondWidth = 400/TotalSeconds;
+  SecondPassed = 0; 
+}
+
 void CambiarValoresNivel(){
     //Cambio valores de la velocidad y el espacio de los objetos que se muvene,  y las coliciones tambien
     //Los objetos que c mueven son los autos, Los troncos y las tortugas
@@ -394,6 +404,8 @@ void CambiarValoresNivel(){
 
     ResetTortugas(T1);
     ResetTortugas(T2);
+
+    ResetTime();
     
     int Anchura = esat::SpriteWidth(SpriteMeta) + (esat::SpriteWidth(SpritePastoVerde)*2);
 
@@ -418,6 +430,7 @@ void RespawnPlayer(){
   Player1.dir=UP;
   Player1.arriba = Player1.colision.P1.y;
 }
+
 
 /*******************************************************
 ********************Colisiones**************************
@@ -446,14 +459,17 @@ void ColisionPlayerMeta(Frog *P){
           P->score += 200;
           RespawnPlayer();
           fin[i].evento = 3;
+          ResetTime();
         break;
         case 1: //si mosca
           P->score += 400;
           RespawnPlayer();
           fin[i].evento = 3;
+          ResetTime();
         break;
         case 2: // si cocodrilomuerto
           Death(&P->muriendo, &P->vidas, &P->arriba, P->colision.P1.y);
+          ResetTime();
         break;
         case 3: //si esta ocupado rana retrocede
           P->colision.P1.y += 48;
@@ -769,6 +785,7 @@ void AnimacionMuerte(Frog *P){
   if(TimerFrames > 2100){
     RespawnPlayer();
     P->muriendo = false;
+    ResetTime();
   }
 }
 
@@ -1190,7 +1207,32 @@ void DibujarNivel(){
 }
 
 void TibujarTime(){
-  //TO-DO 
+  // LevelTime es los segundos
+  if(Player1.muriendo == false){
+    if((LevelTime + (1000*SecondPassed) + 1000) < esat::Time()){
+      SecondPassed += 1;
+    }
+  }
+
+  if(Player1.muriendo == false){
+    if(TotalSeconds < SecondPassed){
+      Death(&Player1.muriendo, &Player1.vidas, &Player1.arriba, Player1.colision.P1.y);
+    }
+  }
+
+  float TimeSpace[10] = {(float)((ScreenX - 500) + (SecondWidth*SecondPassed)), (float)(ScreenY - 24),// cordenadas barra tiempo
+                      (float)(ScreenX - 100), (float)(ScreenY - 24),
+                      (float)(ScreenX - 100) , (float)(ScreenY - 5),
+                      (float)((ScreenX - 500) + (SecondWidth*SecondPassed)), (float)(ScreenY - 5),
+                      (float)((ScreenX - 500) + (SecondWidth*SecondPassed)), (float)(ScreenY - 24)
+                      };
+
+    
+  esat::DrawSetFillColor(0, 255, 0);
+  esat::DrawSolidPath(TimeSpace, 5);
+
+  esat::DrawSetFillColor(255, 255, 0);
+  esat::DrawText(ScreenX - 90, ScreenY - 5, "TIME");
 }
 
 void DibujarCreditos(){
